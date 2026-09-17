@@ -92,15 +92,15 @@
         .trip-meta div { display: flex; gap: 8px; align-items: baseline; }
         .trip-meta b { color: var(--ink); font-weight: 600; }
 
-        .line-nav { position: relative; padding: 34px 4px 10px; margin-bottom: 6px; overflow-x: auto; }
+        .line-nav { position: relative; padding: 24px 4px 10px; margin-bottom: 6px; overflow-x: auto; }
         .line-track { position: relative; display: flex; min-width: 680px; justify-content: space-between; padding: 0 6px; }
         .line-track::before {
-            content: ""; position: absolute; left: 6px; right: 6px; top: 15px;
+            content: ""; position: absolute; left: 6px; right: 6px; top: 11px;
             height: 4px; background: var(--yamanote); border-radius: 2px;
         }
 
         .stop {
-            position: relative; display: flex; flex-direction: column; align-items: center; gap: 10px;
+            position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px;
             background: none; border: none; cursor: pointer; font-family: inherit; color: var(--ink-soft);
             padding: 0 4px; flex: 1;
         }
@@ -110,11 +110,10 @@
             border: 4px solid var(--yamanote); z-index: 2; transition: transform .15s ease;
         }
 
-        .stop .day-no { font-size: 11px; letter-spacing: .06em; color: var(--ink-soft); }
-        .stop .area { font-size: 12.5px; font-weight: 600; color: var(--ink); text-align: center; white-space: nowrap; }
+        .stop .day-no { font-size: 12px; font-weight: 700; letter-spacing: .06em; color: var(--ink-soft); }
 
         .stop[aria-selected="true"] .dot { background: var(--hanko); border-color: var(--hanko); transform: scale(1.25); }
-        .stop[aria-selected="true"] .area { color: var(--hanko); }
+        .stop[aria-selected="true"] .day-no { color: var(--hanko); }
         .stop:hover .dot { transform: scale(1.15); }
 
         .day-panel { display: none; }
@@ -266,13 +265,11 @@
         let LOCATION_COORDS = {};
         const leafletMaps = [];
 
-        // 依據原本順路區域 Flow 的順序，精準拿掉丁目、保留大地區名稱並按原序串接
+        // 依據原本順路區域 Flow，保留原始順序，僅拔掉「丁目」字眼作為 Day 標題
         function getTitleFromFlow(flowArray) {
             if (!flowArray || flowArray.length === 0) return '';
-            let cleaned = flowArray.map(item => item.replace(/\s*\d+丁目?/g, '').trim());
-            // 保持原順序並過濾重複（若需要保留連續順序中的唯一值可直接用下面這行）
-            let uniqueOrdered = [...new Set(cleaned)];
-            return uniqueOrdered.join(' ➔ ');
+            let cleaned = flowArray.map(item => item.replace(/\d+丁目/g, '').trim());
+            return cleaned.join(' ➔ ');
         }
 
         function gmaps(name, addr) {
@@ -344,16 +341,14 @@
             DAYS.forEach((d, i) => {
                 d.items.forEach((it, idx) => it._idx = idx);
 
-                // 產出跟 Flow 一致但去除了丁目的依序大地區標題
                 const flowAreas = d.routeFlow.length ? d.routeFlow : [];
                 const displayTitle = getTitleFromFlow(flowAreas);
 
-                // 1. 建立頂部導航站點（取標題的第一個大站作為圓點下方文字）
+                // 1. 建立頂部導航站點（已移除下方地區文字，僅保留 Day 標籤與圓點）
                 const stop = document.createElement('button');
                 stop.className = 'stop';
                 stop.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
-                const firstAreaShort = flowAreas.length ? flowAreas[0].replace(/\s*\d+丁目?/g, '').trim() : '';
-                stop.innerHTML = `<span class="day-no">${d.dayNo}</span><span class="dot"></span><span class="area">${firstAreaShort}</span>`;
+                stop.innerHTML = `<span class="day-no">${d.dayNo}</span><span class="dot"></span>`;
                 stop.addEventListener('click', () => selectDay(i));
                 track.appendChild(stop);
 
@@ -380,7 +375,7 @@
                     if (it.area) areaSet.add(it.area);
                 });
 
-                // Filter 保持原本完整的丁目名稱與順序
+                // Filter 保持與 CSV / routeFlow 完全一致的完整名稱
                 const areaOptions = Array.from(areaSet).map(a => `<option value="${a}">${a}</option>`).join('');
                 let flowHtml = '';
 
