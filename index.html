@@ -174,8 +174,7 @@
 
         .node-btn:hover { border-color: var(--yamanote-dark); color: var(--yamanote-dark); }
         .node-btn.active { background: var(--yamanote-dark); color: #fff; border-color: var(--yamanote-dark); }
-        .arrow-wrap { display: inline-flex; flex-direction: column; align-items: center; font-size: 10px; color: var(--ink-soft); margin: 0 2px; }
-        .arrow-wrap .t-mode { font-size: 9px; background: rgba(91,107,120,0.08); padding: 1px 4px; border-radius: 4px; margin-top: 1px; white-space: nowrap; }
+        .route-transit { font-size: 11px; color: var(--ink-soft); background: rgba(91, 107, 120, 0.08); padding: 2px 6px; border-radius: 4px; margin: 0 2px; }
 
         .area-filter-box {
             display: flex; align-items: center; gap: 10px; background: var(--card);
@@ -206,10 +205,9 @@
         .spot-list { display: flex; flex-direction: column; gap: 8px; }
         .spot {
             background: var(--card); border: 1px solid var(--paper-line); border-radius: var(--radius);
-            padding: 11px 14px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 6px; transition: opacity .15s ease;
+            padding: 11px 14px; box-shadow: var(--shadow); display: flex; gap: 12px; transition: opacity .15s ease;
         }
 
-        .spot-row-top { display: flex; gap: 12px; align-items: flex-start; }
         .spot .time { flex: 0 0 46px; font-size: 11.5px; color: var(--ink-soft); padding-top: 2px; }
         .spot-body { flex: 1; min-width: 0; }
         .spot-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -218,12 +216,6 @@
         .reserved {
             display: inline-flex; align-items: center; gap: 5px; font-size: 11px;
             font-weight: 700; color: var(--hanko); margin-top: 5px;
-        }
-
-        .spot-transport-hint {
-            background: rgba(143, 174, 60, 0.08); border-left: 3px solid var(--yamanote);
-            padding: 4px 8px; font-size: 11.5px; color: var(--ink-soft); border-radius: 0 var(--radius) var(--radius) 0;
-            margin-top: 4px; display: flex; align-items: center; gap: 6px;
         }
 
         .spot-link {
@@ -313,7 +305,7 @@
                         date: item.date || "",
                         area: item.dayArea || "",
                         brief: item.brief || "",
-                        routeFlow: item.routeFlow ? item.routeFlow.split('->').map(s => s.trim()) : [],
+                        routeFlow: item.routeFlow ? item.routeFlow.split(';').map(s => s.trim()) : [],
                         items: []
                     };
                 }
@@ -324,8 +316,7 @@
                     name: item.name,
                     addr: item.addr,
                     area: item.area || "",
-                    reserved: item.reserved === 'true',
-                    transport: item.transport || ""
+                    reserved: item.reserved === 'true'
                 });
 
                 if (item.area && item.lat && item.lng) {
@@ -345,7 +336,7 @@
             DAYS.forEach((d, i) => {
                 d.items.forEach((it, idx) => it._idx = idx);
 
-                // 1. 建立頂部導航站點（顯示地區縮寫）
+                // 1. 建立頂部導航站點
                 const stop = document.createElement('button');
                 stop.className = 'stop';
                 stop.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
@@ -377,26 +368,30 @@
                 });
 
                 const areaOptions = Array.from(areaSet).sort().map(a => `<option value="${a}">${a}</option>`).join('');
-                const flowAreas = d.routeFlow.length ? d.routeFlow : Array.from(areaSet);
+                
+                // 智慧解析 routeFlow（支援點跟點之間夾帶如 ➔ (步行 5分) ➔ 的格式或單純地區）
+                const flowEntries = d.routeFlow.length ? d.routeFlow : Array.from(areaSet);
                 let flowHtml = '';
 
-                if (flowAreas.length) {
-                    const nodes = flowAreas.map((areaName, idx) => {
-                        const nextItem = d.items[idx];
-                        const tMode = (nextItem && nextItem.transport) ? nextItem.transport : '步行';
-                        const arrowContent = idx < flowAreas.length - 1 ? 
-                            `<span class="arrow-wrap"><span>➔</span><span class="t-mode">${tMode.split(' ')[0]}</span></span>` : '';
-
-                        return `<button type="button" class="node-btn" data-area="${areaName}">${idx + 1}. ${areaName}</button>` + arrowContent;
+                if (flowEntries.length) {
+                    let nodeCounter = 1;
+                    const nodesHtml = flowEntries.map(entry => {
+                        // 如果裡面包含交通方式（例如 "原宿 ➔ (步行 5分)" 或類似結構）
+                        if (entry.includes('(') && entry.includes(')')) {
+                            return `<span class="route-transit">${entry}</span>`;
+                        } else {
+                            const currentNum = nodeCounter++;
+                            return `<button type="button" class="node-btn" data-area="${entry}">${currentNum}. ${entry}</button>`;
+                        }
                     }).join(' ');
 
                     flowHtml = `
                     <div class="route-flow">
                         <div class="route-flow-header">
-                            <span class="route-flow-title">🗺️ 最短路徑與交通方式 Flow：</span>
+                            <span class="route-flow-title">🗺️ 順路區域與交通 Flow：</span>
                             <button type="button" class="reset-btn">顯示全部</button>
                         </div>
-                        <div class="route-nodes">${nodes}</div>
+                        <div class="route-nodes">${nodesHtml}</div>
                     </div>`;
                 }
 
@@ -453,25 +448,22 @@
             const link = gmaps(it.name, it.addr);
             return `
             <div class="spot" id="spot-${dayIndex}-${it._idx}" data-area="${it.area || ''}" data-reserved="${it.reserved ? 'true' : 'false'}">
-                <div class="spot-row-top">
-                    <div class="icon-tag icon-${it.cat}">${ICONS[it.cat]}</div>
-                    <div class="spot-body">
-                        <div class="spot-top">
-                            ${it.time ? `<span class="spot-name">${it.time} ${it.name}</span>` : `<span class="spot-name">${it.name}</span>`}
-                            ${it.area ? `<span class="area-tag">${it.area}</span>` : ''}
-                        </div>
-                        ${it.addr ? `<div class="spot-addr">${it.addr}</div>` : ''}
-                        ${it.reserved ? `<div class="reserved">◆ 已訂位</div>` : ''}
-                        ${it.transport ? `<div class="spot-transport-hint"><span>➡️ 交通：${it.transport}</span></div>` : ''}
-                        <a class="spot-link" href="${link}" target="_blank" rel="noopener">在 Google 地圖開啟 ↗</a>
+                <div class="icon-tag icon-${it.cat}">${ICONS[it.cat]}</div>
+                <div class="spot-body">
+                    <div class="spot-top">
+                        ${it.time ? `<span class="spot-name">${it.time} ${it.name}</span>` : `<span class="spot-name">${it.name}</span>`}
+                        ${it.area ? `<span class="area-tag">${it.area}</span>` : ''}
                     </div>
+                    ${it.addr ? `<div class="spot-addr">${it.addr}</div>` : ''}
+                    ${it.reserved ? `<div class="reserved">◆ 已訂位</div>` : ''}
+                    <a class="spot-link" href="${link}" target="_blank" rel="noopener">在 Google 地圖開啟 ↗</a>
                 </div>
             </div>`;
         }
 
-        function initLeafletMap(dayIndex, flowAreas) {
+        function initLeafletMap(dayIndex, flowEntries) {
             const mapContainer = document.getElementById(`map-leaf-${dayIndex}`);
-            if (!mapContainer || !flowAreas || flowAreas.length === 0) return;
+            if (!mapContainer || !flowEntries || flowEntries.length === 0) return;
 
             const map = L.map(mapContainer).setView([35.665, 139.705], 14);
 
@@ -482,23 +474,29 @@
 
             const latlngs = [];
             const bounds = L.latLngBounds();
+            let markerIndex = 1;
 
-            flowAreas.forEach((areaName, idx) => {
-                const coords = LOCATION_COORDS[areaName];
-                if (coords) {
-                    latlngs.push(coords);
-                    bounds.extend(coords);
+            flowEntries.forEach((entry) => {
+                // 濾掉交通標籤，只抓出純地區名稱來標註地圖
+                if (!(entry.includes('(') && entry.includes(')'))) {
+                    const areaName = entry.trim();
+                    const coords = LOCATION_COORDS[areaName];
+                    if (coords) {
+                        latlngs.push(coords);
+                        bounds.extend(coords);
 
-                    const customIcon = L.divIcon({
-                        className: 'custom-route-icon',
-                        html: `<span>${idx + 1}</span>`,
-                        iconSize: [22, 22],
-                        iconAnchor: [11, 11]
-                    });
+                        const customIcon = L.divIcon({
+                            className: 'custom-route-icon',
+                            html: `<span>${markerIndex}</span>`,
+                            iconSize: [22, 22],
+                            iconAnchor: [11, 11]
+                        });
 
-                    L.marker(coords, { icon: customIcon })
-                        .addTo(map)
-                        .bindPopup(`<b>第 ${idx + 1} 站：${areaName}</b>`);
+                        L.marker(coords, { icon: customIcon })
+                            .addTo(map)
+                            .bindPopup(`<b>第 ${markerIndex} 站：${areaName}</b>`);
+                        markerIndex++;
+                    }
                 }
             });
 
