@@ -265,7 +265,6 @@
         let LOCATION_COORDS = {};
         const leafletMaps = [];
 
-        // 依據 Flow 陣列，拿掉丁目後組合成 Day 標題
         function getTitleFromFlow(flowArray) {
             if (!flowArray || flowArray.length === 0) return '';
             let cleaned = flowArray.map(item => item.replace(/\d+丁目/g, '').trim());
@@ -296,9 +295,8 @@
 
             const headers = lines[0].split(',').map(h => h.trim());
             const daysMap = {};
-
-            // 第一階段：先搜集每一天有哪些真實出現的 area 清單
             const rawRows = [];
+
             for (let i = 1; i < lines.length; i++) {
                 const row = lines[i].split(',').map(v => v.trim());
                 if (row.length < headers.length) continue;
@@ -311,7 +309,6 @@
                 }
             }
 
-            // 組織成天數結構
             rawRows.forEach(item => {
                 const dayNo = item.day;
                 if (!daysMap[dayNo]) {
@@ -334,17 +331,13 @@
                 });
             });
 
-            // 第二階段：強制將 routeFlow 的每個名稱對齊該天 Filter 裡有的真實 area 名稱
             Object.values(daysMap).forEach(d => {
                 const validAreas = new Set(d.items.map(it => it.area).filter(Boolean));
                 
                 d.routeFlow = d.rawFlow.map(flowName => {
-                    // 如果剛好完全匹配，直接用
                     if (validAreas.has(flowName)) return flowName;
-
-                    // 尋找是否有包含或被包含的真實 area（例如 flow 寫「代代木」，對應到真實 area「代代木神園町」或「代代木1丁目」）
                     let matched = Array.from(validAreas).find(a => a.includes(flowName) || flowName.includes(a));
-                    return matched ? matched : flowName; // 如果找不到才保留原樣
+                    return matched ? matched : flowName;
                 });
             });
 
@@ -363,7 +356,6 @@
                 const flowAreas = d.routeFlow.length ? d.routeFlow : [];
                 const displayTitle = getTitleFromFlow(flowAreas);
 
-                // 1. 建立頂部導航站點（僅保留 Day 標籤與圓點）
                 const stop = document.createElement('button');
                 stop.className = 'stop';
                 stop.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
@@ -371,7 +363,6 @@
                 stop.addEventListener('click', () => selectDay(i));
                 track.appendChild(stop);
 
-                // 2. 建立 Main Panel
                 const panel = document.createElement('section');
                 panel.className = 'day-panel' + (i === 0 ? ' active' : '');
                 panel.id = 'panel-' + i;
@@ -394,7 +385,6 @@
                     if (it.area) areaSet.add(it.area);
                 });
 
-                // Filter 保持與對齊後的 routeFlow 完全一致
                 const areaOptions = Array.from(areaSet).map(a => `<option value="${a}">${a}</option>`).join('');
                 let flowHtml = '';
 
@@ -441,7 +431,6 @@
                 </div>`;
                 daysEl.appendChild(panel);
 
-                // 3. 綁定事件監聽
                 const selectEl = panel.querySelector(`#filter-${i}`);
                 if (selectEl) {
                     selectEl.addEventListener('change', (e) => filterByArea(i, e.target.value));
