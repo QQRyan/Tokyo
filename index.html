@@ -1,1100 +1,266 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>東京行程 9/30–10/6</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Noto+Sans+TC:wght@400;500;600;700&display=swap"
-    rel="stylesheet">
+  <title>東京行程地圖</title>
 
-  <!-- 引入 Leaflet.js 地圖樣式與 API -->
+  <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <style>
-    :root {
-      --paper: #F6F3EC;
-      --paper-line: #E3DDCC;
-      --ink: #22303F;
-      --ink-soft: #5B6B78;
-      --yamanote: #8FAE3C;
-      --yamanote-dark: #6E8A2A;
-      --hanko: #B23A2E;
-      --shop: #7A6A9C;
-      --card: #FFFFFF;
-      --shadow: 0 1px 0 rgba(34, 48, 63, 0.06);
-      --radius: 3px;
-    }
-
-    :root[data-theme="dark"] {
-      --paper: #161B22;
-      --paper-line: #2A323C;
-      --ink: #EDEBE3;
-      --ink-soft: #9AA6B0;
-      --card: #1F2530;
-      --shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
-    }
-
-    @media (prefers-color-scheme: dark) {
-      :root:not([data-theme="light"]) {
-        --paper: #161B22;
-        --paper-line: #2A323C;
-        --ink: #EDEBE3;
-        --ink-soft: #9AA6B0;
-        --card: #1F2530;
-        --shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
-      }
-    }
-
     * {
       box-sizing: border-box;
-    }
-
-    html,
-    body {
       margin: 0;
       padding: 0;
     }
 
     body {
-      background: var(--paper);
-      color: var(--ink);
-      font-family: 'Noto Sans TC', 'Hiragino Sans', sans-serif;
-      line-height: 1.6;
-      -webkit-font-smoothing: antialiased;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
-    .wrap {
-      max-width: 1080px;
-      margin: 0 auto;
-      padding: 0 20px 90px;
+    #map {
+      width: 100vw;
+      height: 100vh;
     }
 
-    header.trip {
-      padding: 36px 0 22px;
-      border-bottom: 1px solid var(--paper-line);
-      margin-bottom: 28px;
-    }
-
-    .trip-title {
-      font-family: 'Shippori Mincho', serif;
-      font-weight: 700;
-      font-size: clamp(28px, 5vw, 42px);
-      letter-spacing: .02em;
-      margin: 0;
-    }
-
-    .trip-title .sub {
-      display: block;
-      font-family: 'Noto Sans TC', sans-serif;
-      font-weight: 500;
-      font-size: 14px;
-      color: var(--ink-soft);
-      letter-spacing: .08em;
-      margin-top: 6px;
-    }
-
-    .trip-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px 28px;
-      margin-top: 18px;
-      font-size: 13.5px;
-      color: var(--ink-soft);
-    }
-
-    .trip-meta div {
-      display: flex;
-      gap: 8px;
-      align-items: baseline;
-    }
-
-    .trip-meta b {
-      color: var(--ink);
-      font-weight: 600;
-    }
-
-    .line-nav {
-      position: relative;
-      padding: 34px 4px 10px;
-      margin-bottom: 6px;
-      overflow-x: auto;
-    }
-
-    .line-track {
-      position: relative;
-      display: flex;
-      min-width: 680px;
-      justify-content: space-between;
-      padding: 0 6px;
-    }
-
-    .line-track::before {
-      content: "";
+    /* 天數篩選選單 */
+    .filter-container {
       position: absolute;
-      left: 6px;
-      right: 6px;
       top: 15px;
-      height: 4px;
-      background: var(--yamanote);
-      border-radius: 2px;
-    }
-
-    .stop {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-family: inherit;
-      color: var(--ink-soft);
-      padding: 0 4px;
-      flex: 1;
-    }
-
-    .stop .dot {
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: var(--paper);
-      border: 4px solid var(--yamanote);
-      z-index: 2;
-      transition: transform .15s ease;
-    }
-
-    .stop .day-no {
-      font-size: 11px;
-      letter-spacing: .06em;
-      color: var(--ink-soft);
-    }
-
-    .stop .area {
-      font-size: 12.5px;
-      font-weight: 600;
-      color: var(--ink);
-      text-align: center;
-      white-space: nowrap;
-    }
-
-    .stop[aria-selected="true"] .dot {
-      background: var(--hanko);
-      border-color: var(--hanko);
-      transform: scale(1.25);
-    }
-
-    .stop[aria-selected="true"] .area {
-      color: var(--hanko);
-    }
-
-    .stop:hover .dot {
-      transform: scale(1.15);
-    }
-
-    .day-panel {
-      display: none;
-    }
-
-    .day-panel.active {
-      display: block;
-      animation: fade .25s ease;
-    }
-
-    @keyframes fade {
-      from {
-        opacity: 0;
-        transform: translateY(4px)
-      }
-
-      to {
-        opacity: 1;
-        transform: none
-      }
-    }
-
-    .day-head {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin: 34px 0 16px;
-    }
-
-    .day-head h2 {
-      font-family: 'Shippori Mincho', serif;
-      font-size: 24px;
-      margin: 0;
-      font-weight: 700;
-    }
-
-    .day-head .date {
-      font-size: 13px;
-      color: var(--ink-soft);
-      letter-spacing: .04em;
-    }
-
-    .day-brief {
-      font-size: 13.5px;
-      color: var(--ink-soft);
-      margin: -10px 0 18px;
-    }
-
-    .day-grid {
-      display: grid;
-      grid-template-columns: 1.1fr 1fr;
-      gap: 22px;
-      align-items: start;
-    }
-
-    @media (max-width:820px) {
-      .day-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    /* 地圖與互動區域容器 */
-    .map-wrap {
-      position: sticky;
-      top: 16px;
-    }
-
-    @media (max-width:820px) {
-      .map-wrap {
-        position: static;
-      }
-    }
-
-    .map-box {
-      border: 1px solid var(--paper-line);
-      border-radius: var(--radius);
-      background: var(--card);
-      overflow: hidden;
-      box-shadow: var(--shadow);
-    }
-
-    .leaflet-map {
-      width: 100%;
-      height: 420px;
-      z-index: 1;
-    }
-
-    /* 地圖標籤客製化 CSS */
-    .custom-route-icon {
-      background: var(--hanko);
-      color: white;
-      font-weight: bold;
-      font-size: 11px;
-      border-radius: 50%;
-      width: 22px;
-      height: 22px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 2px solid white;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    }
-
-    /* 路線地圖 FLOW 圖表 */
-    .route-flow {
-      margin-top: 14px;
-      background: var(--card);
-      border: 1px solid var(--paper-line);
-      border-radius: var(--radius);
-      padding: 12px 14px;
-      box-shadow: var(--shadow);
-    }
-
-    .route-flow-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-
-    .route-flow-title {
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--ink-soft);
-      letter-spacing: .04em;
-    }
-
-    .reset-btn {
-      font-size: 11px;
-      background: none;
-      border: none;
-      color: var(--yamanote-dark);
-      cursor: pointer;
-      font-weight: 600;
-      padding: 0;
-      text-decoration: underline;
-    }
-
-    .route-nodes {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 6px 4px;
-      font-size: 12px;
-    }
-
-    .node-btn {
-      background: var(--paper);
-      border: 1px solid var(--paper-line);
-      padding: 3px 9px;
-      border-radius: 12px;
-      font-weight: 600;
-      color: var(--ink);
-      cursor: pointer;
-      font-family: inherit;
-      font-size: 11.5px;
-      transition: all .15s ease;
-    }
-
-    .node-btn:hover {
-      border-color: var(--yamanote-dark);
-      color: var(--yamanote-dark);
-    }
-
-    .node-btn.active {
-      background: var(--yamanote-dark);
-      color: #fff;
-      border-color: var(--yamanote-dark);
-    }
-
-    .arrow {
-      color: var(--ink-soft);
-      font-size: 10px;
-    }
-
-    /* 區域下拉篩選器 */
-    .area-filter-box {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: var(--card);
-      border: 1px solid var(--paper-line);
-      border-radius: var(--radius);
+      left: 15px;
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.95);
       padding: 10px 14px;
-      margin-bottom: 20px;
-      box-shadow: var(--shadow);
-    }
-
-    .area-filter-box label {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--ink);
-      white-space: nowrap;
-    }
-
-    .area-filter-box select {
-      flex: 1;
-      padding: 6px 10px;
-      font-size: 13px;
-      font-family: inherit;
-      color: var(--ink);
-      background: var(--paper);
-      border: 1px solid var(--paper-line);
-      border-radius: var(--radius);
-      outline: none;
-      cursor: pointer;
-    }
-
-    .spot.hidden {
-      display: none !important;
-    }
-
-    .area-tag {
-      font-size: 10.5px;
-      color: var(--ink-soft);
-      background: rgba(91, 107, 120, .1);
-      border-radius: 20px;
-      padding: 1px 8px;
-    }
-
-    .cat-block {
-      margin-bottom: 22px;
-    }
-
-    .cat-title {
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
       display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--ink-soft);
-      margin-bottom: 10px;
-      letter-spacing: .03em;
-    }
-
-    .cat-title .count {
-      font-weight: 500;
-      color: var(--ink-soft);
-    }
-
-    .spot-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .spot {
-      background: var(--card);
-      border: 1px solid var(--paper-line);
-      border-radius: var(--radius);
-      padding: 11px 14px;
-      box-shadow: var(--shadow);
-      display: flex;
-      gap: 12px;
-      transition: opacity .15s ease;
-    }
-
-    .spot .time {
-      flex: 0 0 46px;
-      font-size: 11.5px;
-      color: var(--ink-soft);
-      padding-top: 2px;
-    }
-
-    .spot-body {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .spot-top {
-      display: flex;
-      align-items: center;
       gap: 8px;
       flex-wrap: wrap;
+      max-width: calc(100vw - 30px);
     }
 
-    .spot-name {
-      font-weight: 600;
-      font-size: 14.5px;
+    .filter-btn {
+      background: #f0f0f0;
+      border: 1px solid #ccc;
+      padding: 6px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
     }
 
-    .spot-addr {
+    .filter-btn.active,
+    .filter-btn:hover {
+      background: #007bff;
+      color: #fff;
+      border-color: #007bff;
+    }
+
+    /* Popup 彈出視窗樣式 */
+    .popup-title {
+      font-weight: bold;
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+
+    .popup-tag {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .cat-food {
+      background-color: #e74c3c;
+    }
+
+    .cat-shop {
+      background-color: #e67e22;
+    }
+
+    .cat-sight {
+      background-color: #2ecc71;
+    }
+
+    .cat-stay {
+      background-color: #9b59b6;
+    }
+
+    .cat-move {
+      background-color: #34495e;
+    }
+
+    .popup-info {
       font-size: 12px;
-      color: var(--ink-soft);
-      opacity: .8;
-      margin-top: 2px;
-    }
-
-    .reserved {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--hanko);
-      margin-top: 5px;
-    }
-
-    .vague {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 11px;
-      font-weight: 600;
-      color: #B08900;
-      margin-top: 5px;
-    }
-
-    .spot-link {
-      margin-top: 6px;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--yamanote-dark);
-      text-decoration: none;
-      border-bottom: 1px solid transparent;
-    }
-
-    .spot-link:hover {
-      border-color: var(--yamanote-dark);
-    }
-
-    .icon-tag {
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      flex: 0 0 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      margin-top: 1px;
-    }
-
-    .icon-food {
-      background: rgba(178, 58, 46, .12);
-      color: var(--hanko);
-    }
-
-    .icon-shop {
-      background: rgba(122, 106, 156, .14);
-      color: var(--shop);
-    }
-
-    .icon-sight {
-      background: rgba(143, 174, 60, .16);
-      color: var(--yamanote-dark);
-    }
-
-    .icon-stay,
-    .icon-move {
-      background: rgba(91, 107, 120, .12);
-      color: var(--ink-soft);
-    }
-
-    .unplaced {
-      margin-top: 50px;
-      padding-top: 22px;
-      border-top: 1px solid var(--paper-line);
-    }
-
-    .unplaced h3 {
-      font-family: 'Shippori Mincho', serif;
-      font-size: 18px;
-      margin: 0 0 6px;
-    }
-
-    .unplaced p {
-      font-size: 13px;
-      color: var(--ink-soft);
-      margin: 0 0 14px;
-    }
-
-    .unplaced .spot-list {
-      max-width: 520px;
+      color: #555;
     }
   </style>
 </head>
 
 <body>
-  <div class="wrap">
 
-    <header class="trip">
-      <h1 class="trip-title">東京<span class="sub">TOKYO ITINERARY · 2026.09.30 – 10.06</span></h1>
-      <div class="trip-meta">
-        <div>✈️ <b>去程</b> IT200 TPE 06:35 → NRT 11:00（9/30）</div>
-        <div>✈️ <b>回程</b> IT701 NRT 20:45 → TPE 23:25（10/6）</div>
-        <div>🏨 <b>9/30–10/3</b> 多美迎飯店−涉谷神宮前</div>
-        <div>🏨 <b>10/3–10/6</b> 神田 Sudacho</div>
-      </div>
-    </header>
-
-    <nav class="line-nav" aria-label="行程日期">
-      <div class="line-track" id="lineTrack"></div>
-    </nav>
-
-    <main id="days"></main>
-
-    <div class="unplaced" id="unplacedBox"></div>
-
+  <div class="filter-container" id="filterContainer">
+    <button class="filter-btn active" onclick="filterDay('All', this)">全部顯示</button>
   </div>
 
+  <div id="map"></div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
   <script>
-    // 各區域的真實經緯度座標數據庫 (Latitude, Longitude)
-    const LOCATION_COORDS = {
-      "神宮前6丁目": [35.6635, 139.7042],
-      "代代木1丁目": [35.6836, 139.6994],
-      "代代木2丁目": [35.6865, 139.6980],
-      "西麻布2丁目": [35.6592, 139.7215],
-      "南青山5丁目": [35.6625, 139.7130],
-      "南青山3丁目": [35.6680, 139.7160],
-      "北青山3丁目": [35.6672, 139.7088],
-      "神宮前5丁目": [35.6655, 139.7075],
-      "神宮前3丁目": [35.6710, 139.7090],
-      "神宮前2丁目": [35.6745, 139.7105],
-      "神宮前4丁目": [35.6682, 139.7095],
-      "神宮前1丁目": [35.6705, 139.7032],
-      "原宿": [35.6702, 139.7027],
-      "表參道": [35.6652, 139.7123],
-      "新宿": [35.6909, 139.7005],
-      "西新宿": [35.6918, 139.6953],
-      "歌舞伎町": [35.6938, 139.7035],
-      "千駄谷": [35.6811, 139.7110],
-      "涉谷": [35.6580, 139.7016],
-      "道玄坂": [35.6582, 139.6982],
-      "神南": [35.6626, 139.7001],
-      "惠比壽": [35.6467, 139.7101],
-      "廣尾": [35.6522, 139.7222],
-      "神田": [35.6917, 139.7709],
-      "丸之內": [35.6812, 139.7649],
-      "銀座": [35.6718, 139.7650],
-      "東京鐵塔/芝公園": [35.6586, 139.7454],
-      "六本木": [35.6628, 139.7314],
-      "麻布十番": [35.6547, 139.7370],
-      "淺草": [35.7148, 139.7967],
-      "上野公園": [35.7146, 139.7733]
+    let map;
+    let allLocations = [];
+    let markersGroup = L.featureGroup();
+    let routeLine = null;
+
+    // 分類名稱地圖
+    const catNames = {
+      'food': '美食',
+      'shop': '購物',
+      'sight': '景點',
+      'stay': '住宿',
+      'move': '交通'
     };
 
-    function gmaps(name, addr) {
-      const q = encodeURIComponent(addr ? `${name} ${addr}` : name);
-      return `https://www.google.com/maps/search/?api=1&query=${q}`;
-    }
-    const ICONS = { food: "🍜", shop: "🛍️", sight: "⛩️", stay: "🏨", move: "➡️" };
-    const CAT_LABEL = { food: "美食", shop: "購物", sight: "景點", stay: "住宿", move: "移動" };
+    // 初始化地圖 (使用 Esri 街道地圖，免 API Key、無浮水印)
+    function initMap() {
+      map = L.map('map').setView([35.6762, 139.6503], 12);
 
-    const DAYS = [
-      {
-        dayNo: "Day 1", date: "9/30（三）", area: "抵達・新宿",
-        brief: "下飛機 check-in 後,晚上往新宿逛街吃飯。",
-        routeFlow: ["西新宿", "新宿", "歌舞伎町", "代代木2丁目", "千駄谷"],
-        items: [
-          { cat: "move", time: "11:00", name: "成田機場 抵達 → 前往涉谷" },
-          { cat: "stay", time: "15:00", name: "多美迎飯店 涉谷神宮前 Check-in", addr: "6-24-4 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "UNITED ARROWS (LUMINE1)", addr: "1-1-5 Nishishinjuku, Shinjuku City, Tokyo" },
-          { cat: "shop", name: "Bshop (LUMINE1)", addr: "1-1-5 Nishishinjuku, Shinjuku City, Tokyo" },
-          { cat: "shop", name: "Snow Peak (LUMINE1)", addr: "1-1-5 Nishishinjuku, Shinjuku City, Tokyo" },
-          { cat: "shop", name: "TOMORROWLAND (Shinjuku LUMINE1)" },
-          { cat: "shop", name: "master-piece (LUMINE2)", addr: "3-38-2 Shinjuku, Shinjuku City, Tokyo" },
-          { cat: "shop", name: "relume JOURNAL STANDARD (LUMINE2)", addr: "3-38-2 Shinjuku, Shinjuku City, Tokyo" },
-          { cat: "shop", name: "FREAK'S STORE Lumine Shinjuku Women's", addr: "3-38-2 Shinjuku, Shinjuku City, Tokyo" },
-          { cat: "shop", name: "FREAK'S STORE (LUMINE EST)", addr: "3-38-1 Shinjuku, Shinjuku City, Tokyo" },
-          { cat: "shop", name: "BEAMS Shinjuku", addr: "3-38-1 Shinjuku, Shinjuku City, Tokyo" },
-          { cat: "shop", name: "BEAMS (LUMINE EST)", addr: "3-38-1 Shinjuku, Shinjuku City, Tokyo" },
-          { cat: "shop", name: "BEAMS JAPAN Shinjuku", addr: "3-32-6 Shinjuku, Shinjuku City, Tokyo" },
-          { cat: "shop", name: "Onitsuka Tiger (LUMINE EST)", addr: "3-38-1 Shinjuku, Shinjuku City, Tokyo" },
-          { cat: "shop", name: "PORTER STAND (LUMINE EST)", addr: "3-38-1 Shinjuku, Shinjuku City, Tokyo" },
-          { cat: "shop", name: "LHP (LUMINE EST)", addr: "3-38-1 Shinjuku, Shinjuku City, Tokyo" },
-          { cat: "shop", name: "STUDIOUS MENS (LUMINE EST)", addr: "3-38-1 Shinjuku, Shinjuku City, Tokyo" },
-          { cat: "shop", name: "417 EDIFICE (LUMINE EST)", addr: "3-38-1 Shinjuku, Shinjuku City, Tokyo" },
-          { cat: "shop", name: "MIZUNO SPORTSTYLE LUMINE EST SHINJUKU" },
-          { cat: "shop", name: "SUPER a MARKET (NEWoMan)", addr: "4-1-6 Shinjuku, Shinjuku City, Tokyo" },
-          { cat: "shop", name: "LE LABO (NEWoMan)", addr: "4-1-6 Shinjuku, Shinjuku City, Tokyo" },
-          { cat: "shop", name: "New Balance (NEWoMan)", addr: "4-1-6 Shinjuku, Shinjuku City, Tokyo" },
-          { cat: "shop", name: "JOURNAL STANDARD FURNITURE (NEWoMan)", addr: "4-1-6 Shinjuku, Shinjuku City, Tokyo" },
-          { cat: "shop", name: "Ms.SeeP EYEVAN (NEWoMan)", addr: "4-1-6 Shinjuku, Shinjuku City, Tokyo" },
-          { cat: "shop", name: "HealthyTOKYO CBD Shop & Cafe Shinjuku Marui Honkan", addr: "1-4-1 Shinjuku, Shinjuku City, Tokyo" },
-          { cat: "shop", name: "I'm FREE Shinjuku Kabukicho", addr: "1-12-6 Kabukicho, Shinjuku City, Tokyo" },
-          { cat: "shop", name: "CHILLAXY Shinjuku", addr: "2-12-16 Shinjuku, Shinjuku City, Tokyo" },
-          { cat: "shop", name: "CBD HILLS Shinjuku", addr: "3-32-2 Shinjuku, Shinjuku City, Tokyo" },
-          { cat: "food", name: "Yuji", addr: "1-1-1 Nishi-Shinjuku, Shinjuku City, Tokyo" },
-          { cat: "food", name: "eggslut Shinjuku Southern Terrace", addr: "2-2-1 Yoyogi, Shibuya City, Tokyo" },
-          { cat: "food", name: "Ramen Hayashida Shinjuku Shop", addr: "3-31-5 Shinjuku, Shinjuku City, Tokyo" },
-          { cat: "food", name: "Ramen Kamo to Negi - Shinjuku West Exit", addr: "1-6-1 Nishi-Shinjuku, Shinjuku City, Tokyo" },
-          { cat: "food", name: "Yokohama Iekei Ramen Midori", addr: "1-12-6 Kabukicho, Shinjuku City, Tokyo" },
-          { cat: "food", name: "Fuunji Shinjuku", addr: "2-14-3 Yoyogi, Shibuya City, Tokyo" },
-          { cat: "food", name: "Tsukemen Gonokami Seisakusho", addr: "5-33-16 Sendagaya, Shibuya City, Tokyo" },
-          { cat: "food", name: "Steak Max Shinjuku Chuo-dori", addr: "3-31-7 Shinjuku, Shinjuku City, Tokyo" },
-          { cat: "food", name: "Tanyaki Shinobu", addr: "9 Sanyeicho, Shinjuku City, Tokyo" }
-        ]
-      },
-      {
-        dayNo: "Day 2", date: "10/1（四）", area: "西麻布 ➔ 南青山 ➔ 神宮前 ➔ 原宿",
-        brief: "依紅線規劃：從飯店出發過明治神宮，赴西麻布豚組午餐，再沿南青山、北青山一路逛回神宮前各區。",
-        routeFlow: [
-          "神宮前6丁目",
-          "代代木1丁目",
-          "西麻布2丁目",
-          "南青山5丁目",
-          "南青山3丁目",
-          "北青山3丁目",
-          "神宮前5丁目",
-          "神宮前3丁目",
-          "神宮前2丁目",
-          "神宮前4丁目",
-          "神宮前1丁目",
-          "原宿",
-          "表參道"
-        ],
-        items: [
-          { cat: "sight", time: "10:00", name: "Meiji Jingu (明治神宮)", addr: "1-1 Yoyogikamicho, Shibuya City, Tokyo" },
-          { cat: "food", time: "12:00", name: "Butagumi (豚組)", addr: "2-24-9 Nishi-Azabu, Minato City, Tokyo", reserved: true },
-          { cat: "shop", name: "Graphpaper AOYAMA", addr: "5-3-2 Minamiaoyama, Minato City, Tokyo" },
-          { cat: "shop", name: "Gentle Monster Aoyama Flagship store", addr: "5-3-2 Minamiaoyama, Minato City, Tokyo" },
-          { cat: "shop", name: "CITY TOKYO Aoyama", addr: "5-4-41 Minamiaoyama, Minato City, Tokyo" },
-          { cat: "shop", name: "EYEVAN Tokyo Gallery", addr: "5-13-2 Minamiaoyama, Minato City, Tokyo" },
-          { cat: "shop", name: "Eyevol Tokyo Store", addr: "5-12-6 Minamiaoyama, Minato City, Tokyo" },
-          { cat: "shop", name: "OPTICAL TAILOR CRADLE Aoyama", addr: "5-7-20 Minamiaoyama, Minato City, Tokyo" },
-          { cat: "shop", name: "H BEAUTY&YOUTH", addr: "3-14-17 Minamiaoyama, Minato City, Tokyo" },
-          { cat: "food", name: "Yanmo", addr: "5-5-25 Minamiaoyama, Minato City, Tokyo" },
-          { cat: "food", name: "AMAM DACOTAN", addr: "3-7-6 Kita-Aoyama, Minato City, Tokyo" },
-          { cat: "food", name: "I'm donut? Omotesando", addr: "3-16-3 Kita-Aoyama, Minato City, Tokyo" },
-          { cat: "shop", name: "THE H.W. DOG&Co.", addr: "5-16-5 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "V.A.", addr: "5-7-4 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "MoMA Design Store Omotesando", addr: "5-10-1 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "The North Face Standard", addr: "6-10-9 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "LE LABO Harajuku", addr: "6-14-2 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "Patagonia Shibuya, Tokyo", addr: "6-16-8 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "G.B.Gafas SHIBUYA", addr: "6-18-2 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "Tokyu Plaza Harajuku 'Harakado'", addr: "6-31-21 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "HealthyTOKYO CBD Shop & Labo Harajuku Harakado", addr: "6-31-21 Jingumae, Shibuya City, Tokyo" },
-          { cat: "food", name: "Hamburg Steak under P.Cole (P.Cole 樓下漢堡排)", addr: "5-25-4 Jingumae, Shibuya City, Tokyo" },
-          { cat: "food", name: "Menchirashi", addr: "6-13-7 Jingumae, Shibuya City, Tokyo" },
-          { cat: "food", name: "The Teisyoku Shop", addr: "6-14-12 Jingumae, Shibuya City, Tokyo" },
-          { cat: "food", name: "BASO OMOTESANDO", addr: "5-11-2 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "A+S", addr: "3-34-8 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "Beams T Harajuku", addr: "3-25-15 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "BEAMS Harajuku", addr: "3-24-7 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "UNITED ARROWS Harajuku Main Store", addr: "3-28-1 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "BerBerJin", addr: "3-26-11 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "atmos Harajuku", addr: "3-22-8 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "atmos URAHARA", addr: "3-18-20 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "UNBY GENERAL GOODS STORE TOKYO", addr: "3-18-23 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "Snow Peak Omotesando", addr: "3-22-8 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "Gramicci Harajuku", addr: "3-25-18 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "NANGA SHOP HARAJUKU", addr: "3-24-5 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "UNION TOKYO", addr: "2-26-5 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "FreshService headquarters", addr: "2-6-7 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "I'm FREE. Omotesando", addr: "4-26-22 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "Carhartt WIP Store Harajuku", addr: "4-28-25 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "Supreme Harajuku", addr: "4-32-7 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "BILLY'S HARAJUKU", addr: "4-28-20 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "retaW store HARAJUKU", addr: "4-26-22 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "atmos BLUE OMOTESANDO", addr: "4-29-4 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "BRAIN DEAD STUDIOS HARAJUKU", addr: "4-29-8 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "STUDIOUS TOKYO Omotesando", addr: "4-26-32 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "Stüssy Harajuku Chapter", addr: "4-28-2 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "thisisneverthat Tokyo Flagship", addr: "4-27-6 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "MEDICOM TOY PLUS", addr: "4-12-10 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "The Onitsuka Omotesando", addr: "4-24-14 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "Onitsuka Tiger Omotesando Yellow Concept", addr: "4-24-14 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "Barbour Omotesando", addr: "4-25-15 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "KANEKO GANKYO-TEN Omotesando", addr: "4-12-10 Jingumae, Shibuya City, Tokyo" },
-          { cat: "food", name: "Salmon Bowl Kumada", addr: "3-20-10 Jingumae, Shibuya City, Tokyo" },
-          { cat: "food", name: "Nanadaime tora", addr: "3-22-1 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "GR8", addr: "1-11-6 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "Kinetics", addr: "1-12-7 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "NUBIAN HARAJUKU", addr: "1-20-2 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "HUMAN MADE HARAJUKU", addr: "1-11-6 Jingumae, Shibuya City, Tokyo" },
-          { cat: "food", name: "DE FRITES STAAN HARAJUKU", addr: "1-11-6 Jingumae, Shibuya City, Tokyo" }
-        ]
-      },
-      {
-        dayNo: "Day 3", date: "10/2（五）", area: "代官山・中目黑・涉谷",
-        brief: "白天代官山、中目黑散步，下午涉谷逛街，傍晚 Shibuya Sky。",
-        routeFlow: ["神南", "道玄坂", "涉谷", "惠比壽", "廣尾"],
-        items: [
-          { cat: "sight", time: "17:00", name: "Shibuya Sky", addr: "2-24-12 Shibuya, Shibuya City, Tokyo" },
-          { cat: "shop", name: "FREAK'S STORE Shibuya", addr: "1-13-1 Jinnan, Shibuya City, Tokyo" },
-          { cat: "shop", name: "Shibuya Parco", addr: "15-1 Udagawacho, Shibuya City, Tokyo" },
-          { cat: "shop", name: "VAPE Hills Shibuya Dogenzaka", addr: "2-16-3 Dogenzaka, Shibuya City, Tokyo" },
-          { cat: "shop", name: "Mimatsu tobacco", addr: "2-22-11 Shibuya, Shibuya City, Tokyo" },
-          { cat: "shop", name: "CHILLAXY Shibuya", addr: "2-22-11 Shibuya, Shibuya City, Tokyo" },
-          { cat: "shop", name: "Descendant Tokyo", addr: "1-22-11 Jinnan, Shibuya City, Tokyo" },
-          { cat: "shop", name: "Hakusan Megane WALLS Shibuya", addr: "1-14-3 Jinnan, Shibuya City, Tokyo" },
-          { cat: "shop", name: "BILLY'S ENT Shibuya", addr: "1-19-1 Jinnan, Shibuya City, Tokyo" },
-          { cat: "shop", name: "Pet Paradise Shibuya", addr: "1-22-11 Jinnan, Shibuya City, Tokyo" },
-          { cat: "shop", name: "BEAMS JAPAN SHIBUYA", addr: "1-2-3 Dogenzaka, Shibuya City, Tokyo" },
-          { cat: "shop", name: "VapeMania CBD Dispensary Lounge Ebisu", addr: "1-14-10 Ebisuninshi, Shibuya City, Tokyo" },
-          { cat: "food", name: "RaiAn (雷庵)", addr: "1-9-2 Shibuya, Shibuya City, Tokyo" },
-          { cat: "food", name: "Tsukumo Ramen Ebisu Honten", addr: "1-1-10 Hiroo, Shibuya City, Tokyo" },
-          { cat: "food", name: "AFURI Ebisu", addr: "1-1-7 Ebisunishi, Shibuya City, Tokyo" },
-          { cat: "food", name: "L'Antica Pizzeria da Michele Ebisu branch", addr: "4-4-7 Ebisu, Shibuya City, Tokyo" }
-        ]
-      },
-      {
-        dayNo: "Day 4", date: "10/3（六）", area: "移動日・神田",
-        brief: "退房、移動到神田新飯店，附近先吃拉麵跟甜點。",
-        routeFlow: ["神田", "丸之內"],
-        items: [
-          { cat: "stay", time: "11:00", name: "多美迎飯店 退房" },
-          { cat: "stay", time: "15:00", name: "神田新飯店 Check-in", addr: "Chiyoda-ku Kanda Sudacho 1-16, Tokyo" },
-          { cat: "food", name: "Motenashi Kuroki", addr: "2-15-8 Kanda Izumicho, Chiyoda City, Tokyo" },
-          { cat: "food", name: "Kanda Ramen Waizu", addr: "2-3-1 Interior Kanda, Chiyoda City, Tokyo" },
-          { cat: "food", name: "Echiré Maison du Beurre Marunouchi Store", addr: "2-6-1 Marunouchi, Chiyoda City, Tokyo" }
-        ]
-      },
-      {
-        dayNo: "Day 5", date: "10/4（日）", area: "銀座・東京鐵塔",
-        brief: "上午銀座逛街，傍晚東京鐵塔／六本木周邊晚餐。",
-        routeFlow: ["銀座", "東京鐵塔/芝公園", "麻布十番", "六本木"],
-        items: [
-          { cat: "sight", name: "東京鐵塔" },
-          { cat: "shop", name: "LE LABO Tokyo Tower", addr: "4-2-8 Shibakoen, Minato City, Tokyo" },
-          { cat: "shop", name: "CBD NATION", addr: "7-14-1 Roppongi, Minato City, Tokyo" },
-          { cat: "shop", name: "CHILLAXY Azabu", addr: "1-8-12 Azabujuban, Minato City, Tokyo" },
-          { cat: "food", name: "Tsujita Ginza", addr: "1-4-4 Ginza, Chuo City, Tokyo" },
-          { cat: "food", name: "noix de beurre Ginza Mitsukoshi Store", addr: "4-6-16 Ginza, Chuo City, Tokyo" },
-          { cat: "food", name: "Sakadachi", addr: "1-5-2 Ginza, Chuo City, Tokyo" },
-          { cat: "food", name: "Age.3 GINZA", addr: "1-24-11 Ginza, Chuo City, Tokyo" },
-          { cat: "food", name: "Sushi Mikata", addr: "1-5-1 Ginza, Chuo City, Tokyo" },
-          { cat: "food", name: "Don de la Nature", addr: "1-8-13 Ginza, Chuo City, Tokyo" },
-          { cat: "food", name: "PST Higashi Azabu", addr: "1-3-8 Higashi-Azabu, Minato City, Tokyo" },
-          { cat: "food", name: "Pizzeria da Peppe Napoli Sta' Ca'", addr: "1-11-21 Kamiyacho, Minato City, Tokyo" },
-          { cat: "food", name: "Salon de The Rond - The National Art Center", addr: "7-22-2 Roppongi, Minato City, Tokyo" }
-        ]
-      },
-      {
-        dayNo: "Day 6", date: "10/5（一）", area: "淺草",
-        brief: "雷門、仲見世通，順路上野公園。",
-        routeFlow: ["淺草", "上野公園"],
-        items: [
-          { cat: "sight", name: "Senso-ji Temple", addr: "2-3-1 Asakusa, Taito City, Tokyo" },
-          { cat: "sight", name: "Ueno Park", addr: "Uenokoen, Taito City, Tokyo" },
-          { cat: "shop", name: "VapeMania CBD Dispensary Tokyo Ueno", addr: "3-16-3 Ueno, Taito City, Tokyo" },
-          { cat: "food", name: "Hontosaya", addr: "2-14-12 Nishiasakusa, Taito City, Tokyo" },
-          { cat: "food", name: "ASA虎", addr: "2-14-12 Asakusa, Taito City, Tokyo" },
-          { cat: "food", name: "Noguchi fish store and restaurant", addr: "2-1-3 Higashikoma, Sumida City, Tokyo" }
-        ]
-      },
-      {
-        dayNo: "Day 7", date: "10/6（二）", area: "返程",
-        brief: "退房後前往成田機場。",
-        routeFlow: [],
-        items: [
-          { cat: "stay", time: "11:00", name: "神田飯店 退房" },
-          { cat: "move", time: "17:00", name: "前往成田機場" },
-          { cat: "move", time: "20:45", name: "IT701 起飛 → TPE 23:25" }
-        ]
-      }
-    ];
-
-    const AREA_JP = {
-      "jingumae": "神宮前", "minamiaoyama": "南青山", "kita-aoyama": "北青山",
-      "nishi-azabu": "西麻布", "azabujuban": "麻布十番", "higashi-azabu": "東麻布",
-      "shibuya": "涉谷", "jinnan": "神南", "dogenzaka": "道玄坂",
-      "ebisunishi": "惠比壽西", "ebisu": "惠比壽", "hiroo": "広尾",
-      "shinjuku": "新宿", "nishishinjuku": "西新宿", "nishi-shinjuku": "西新宿", "kabukicho": "歌舞伎町",
-      "yoyogikamicho": "代代木1丁目",
-      "yoyogi": "代代木",
-      "sendagaya": "千駄谷",
-      "kanda izumicho": "神田和泉町", "interior kanda": "神田", "kanda": "神田", "kanda sudacho": "神田須田町",
-      "marunouchi": "丸之內", "ginza": "銀座",
-      "shibakoen": "芝公園", "roppongi": "六本木", "kamiyacho": "神谷町",
-      "asakusa": "淺草", "nishiasakusa": "西淺草",
-      "uenokoen": "上野公園", "ueno": "上野", "higashikoma": "東駒形",
-      "harajuku": "原宿", "omotesando": "表參道"
-    };
-
-    function parseAddr(addr) {
-      if (!addr) return null;
-      const m = addr.match(/^(\d+)-\d+(?:-\d+)?\s+([^,]+),/);
-      if (m) return { chome: parseInt(m[1], 10), area: m[2].trim() };
-      const seg = addr.split(',')[0].trim();
-      return { chome: 0, area: seg.replace(/^\d+(-\d+)*\s*/, '') || seg };
-    }
-
-    function areaLabel(area, chome) {
-      const name = AREA_JP[area.toLowerCase()] || area;
-      if (name.includes('丁目')) return name;
-      return chome ? `${name}${chome}丁目` : name;
-    }
-
-    // 儲存 Leaflet Map 實例陣列
-    const leafletMaps = [];
-
-    function initLeafletMap(dayIndex, flowAreas) {
-      const mapContainer = document.getElementById(`map-leaf-${dayIndex}`);
-      if (!mapContainer || !flowAreas || flowAreas.length === 0) return;
-
-      // 1. 初始化地圖
-      const map = L.map(mapContainer).setView([35.665, 139.705], 14);
-
-      // 替換為 Esri 世界街道地圖（完全免費、免 API Key、無浮水印）
       L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
         maxZoom: 19,
         attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012'
       }).addTo(map);
 
-      const latlngs = [];
-      const bounds = L.latLngBounds();
+      markersGroup.addTo(map);
+    }
 
-      // 2. 在地圖上繪製數字圓點與路線
-      flowAreas.forEach((areaName, idx) => {
-        const coords = LOCATION_COORDS[areaName];
-        if (coords) {
-          latlngs.push(coords);
-          bounds.extend(coords);
+    // 讀取 locations.csv
+    function loadCSVData() {
+      fetch('locations.csv')
+        .then(response => {
+          if (!response.ok) throw new Error("讀取 locations.csv 失敗");
+          return response.text();
+        })
+        .then(csvText => {
+          allLocations = parseCSV(csvText);
+          setupDayButtons();
+          renderMap('All');
+        })
+        .catch(err => {
+          console.error("載入失敗：", err);
+          alert("無法載入 locations.csv，請確認檔案是否在同目錄下。");
+        });
+    }
 
-          const customIcon = L.divIcon({
-            className: 'custom-route-icon',
-            html: `<span>${idx + 1}</span>`,
-            iconSize: [22, 22],
-            iconAnchor: [11, 11]
-          });
+    // 解析 CSV 格式
+    function parseCSV(text) {
+      const lines = text.trim().split('\n');
+      if (lines.length <= 1) return [];
 
-          L.marker(coords, { icon: customIcon })
-            .addTo(map)
-            .bindPopup(`<b>第 ${idx + 1} 站：${areaName}</b>`);
+      const headers = lines[0].split(',').map(h => h.trim());
+      const data = [];
+
+      for (let i = 1; i < lines.length; i++) {
+        // 處理簡單 CSV 拆分（不包含帶逗號引號）
+        const values = lines[i].split(',').map(v => v.trim());
+        if (values.length < headers.length) continue;
+
+        let item = {};
+        headers.forEach((header, idx) => {
+          item[header] = values[idx];
+        });
+
+        // 確保緯經度存在
+        if (item.lat && item.lng && !isNaN(parseFloat(item.lat)) && !isNaN(parseFloat(item.lng))) {
+          data.push(item);
         }
+      }
+      return data;
+    }
+
+    // 動態新增天數篩選按鈕
+    function setupDayButtons() {
+      const days = [...new Set(allLocations.map(loc => loc.day))].filter(Boolean);
+      const container = document.getElementById('filterContainer');
+
+      days.forEach(day => {
+        const btn = document.createElement('button');
+        btn.className = 'filter-btn';
+        btn.innerText = day;
+        btn.onclick = function () { filterDay(day, this); };
+        container.appendChild(btn);
+      });
+    }
+
+    // 切換天數
+    function filterDay(day, btnElement) {
+      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+      btnElement.classList.add('active');
+
+      renderMap(day);
+    }
+
+    // 渲染地圖標記與連線
+    function renderMap(selectedDay) {
+      markersGroup.clearLayers();
+      if (routeLine) map.removeLayer(routeLine);
+
+      const filteredData = selectedDay === 'All'
+        ? allLocations
+        : allLocations.filter(loc => loc.day === selectedDay);
+
+      if (filteredData.length === 0) return;
+
+      const lineCoords = [];
+
+      filteredData.forEach(loc => {
+        const lat = parseFloat(loc.lat);
+        const lng = parseFloat(loc.lng);
+        lineCoords.push([lat, lng]);
+
+        const catClass = `cat-${loc.cat || 'sight'}`;
+        const catLabel = catNames[loc.cat] || '景點';
+
+        const popupContent = `
+          <div>
+            <span class="popup-tag ${catClass}">${loc.day} · ${catLabel}</span>
+            <div class="popup-title">${loc.name}</div>
+            <div class="popup-info">
+              ${loc.time ? `<b>時間：</b>${loc.time}<br>` : ''}
+              ${loc.area ? `<b>區域：</b>${loc.area}<br>` : ''}
+              ${loc.addr ? `<b>地址：</b>${loc.addr}` : ''}
+            </div>
+          </div>
+        `;
+
+        const marker = L.marker([lat, lng]).bindPopup(popupContent);
+        markersGroup.addLayer(marker);
       });
 
-      // 3. 連接點與點（畫紅線）
-      if (latlngs.length > 1) {
-        L.polyline(latlngs, {
-          color: '#B23A2E',
-          weight: 3.5,
-          opacity: 0.85,
-          dashArray: '5, 8'
+      // 如果選擇特定天數，畫虛線連接該天各景點
+      if (selectedDay !== 'All' && lineCoords.length > 1) {
+        routeLine = L.polyline(lineCoords, {
+          color: '#e74c3c',
+          weight: 3,
+          dashArray: '6, 8',
+          opacity: 0.8
         }).addTo(map);
-
-        map.fitBounds(bounds, { padding: [30, 30] });
       }
 
-      leafletMaps[dayIndex] = map;
+      // 自動調整地圖視角涵蓋所有點
+      map.fitBounds(markersGroup.getBounds(), { padding: [40, 40] });
     }
 
-    // 雙向連動篩選
-    function filterByArea(dayIndex, selectedValue) {
-      const panel = document.getElementById('panel-' + dayIndex);
-      if (!panel) return;
-
-      const selectEl = document.getElementById('filter-' + dayIndex);
-      if (selectEl && selectEl.value !== selectedValue) {
-        selectEl.value = selectedValue;
-      }
-
-      panel.querySelectorAll('.node-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.getAttribute('data-filter') === selectedValue);
-      });
-
-      const spots = panel.querySelectorAll('.spot');
-      spots.forEach(spot => {
-        const spotArea = spot.getAttribute('data-area');
-        const isReserved = spot.getAttribute('data-reserved') === 'true';
-
-        if (!selectedValue || selectedValue === 'ALL') {
-          spot.classList.remove('hidden');
-        } else if (selectedValue === 'RESERVED_ONLY') {
-          spot.classList.toggle('hidden', !isReserved);
-        } else {
-          spot.classList.toggle('hidden', spotArea !== selectedValue);
-        }
-      });
-
-      panel.querySelectorAll('.cat-block').forEach(block => {
-        const visibleSpots = block.querySelectorAll('.spot:not(.hidden)').length;
-        const countSpan = block.querySelector('.cat-title .count');
-        if (countSpan) countSpan.textContent = `(${visibleSpots})`;
-        block.style.display = visibleSpots === 0 ? 'none' : 'block';
-      });
-    }
-
-    function renderSpot(it, dayIndex) {
-      const link = gmaps(it.name, it.addr);
-      const parsed = parseAddr(it.addr);
-      const areaTag = parsed ? areaLabel(parsed.area, parsed.chome) : null;
-      return `
-    <div class="spot" id="spot-${dayIndex}-${it._idx}" data-area="${areaTag || ''}" data-reserved="${it.reserved ? 'true' : 'false'}">
-      <div class="icon-tag icon-${it.cat}">${ICONS[it.cat]}</div>
-      <div class="spot-body">
-        <div class="spot-top">
-          ${it.time ? `<span class="spot-name">${it.time} ${it.name}</span>` : `<span class="spot-name">${it.name}</span>`}
-          ${areaTag ? `<span class="area-tag">${areaTag}</span>` : ''}
-        </div>
-        ${it.addr ? `<div class="spot-addr">${it.addr}</div>` : ''}
-        ${it.reserved ? `<div class="reserved">◆ 已訂位</div>` : ''}
-        <a class="spot-link" href="${link}" target="_blank" rel="noopener">在 Google 地圖開啟 ↗</a>
-      </div>
-    </div>`;
-    }
-
-    const track = document.getElementById('lineTrack');
-    const daysEl = document.getElementById('days');
-
-    DAYS.forEach((d, i) => {
-      d.items.forEach((it, idx) => it._idx = idx);
-
-      const stop = document.createElement('button');
-      stop.className = 'stop';
-      stop.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
-      stop.innerHTML = `<span class="day-no">${d.dayNo}</span><span class="dot"></span><span class="area">${d.area.split('・')[0]}</span>`;
-      stop.addEventListener('click', () => selectDay(i));
-      track.appendChild(stop);
-
-      const panel = document.createElement('section');
-      panel.className = 'day-panel' + (i === 0 ? ' active' : '');
-      panel.id = 'panel-' + i;
-
-      const cats = ['sight', 'food', 'shop', 'stay', 'move'];
-      const blocks = cats.map(cat => {
-        const list = d.items.filter(it => it.cat === cat);
-        if (!list.length) return '';
-        return `
-      <div class="cat-block">
-        <div class="cat-title">${ICONS[cat]} ${CAT_LABEL[cat]} <span class="count">(${list.length})</span></div>
-        <div class="spot-list">${list.map(it => renderSpot(it, i)).join('')}</div>
-      </div>`;
-      }).join('');
-
-      const areaSet = new Set();
-      let reservedCount = 0;
-      d.items.forEach(it => {
-        if (it.reserved) reservedCount++;
-        const parsed = parseAddr(it.addr);
-        if (parsed) areaSet.add(areaLabel(parsed.area, parsed.chome));
-      });
-
-      const areaOptions = Array.from(areaSet).sort().map(a => `<option value="${a}">${a}</option>`).join('');
-      const flowAreas = d.routeFlow || Array.from(areaSet);
-      let flowHtml = '';
-
-      if (flowAreas.length) {
-        const nodes = flowAreas.map((areaName, idx) => {
-          return `<button type="button" class="node-btn" data-filter="${areaName}" onclick="filterByArea(${i}, '${areaName}')">${idx + 1}. ${areaName}</button>` +
-            (idx < flowAreas.length - 1 ? `<span class="arrow">➔</span>` : '');
-        }).join(' ');
-
-        flowHtml = `
-      <div class="route-flow">
-        <div class="route-flow-header">
-          <span class="route-flow-title">🗺️ 順路區域 Flow（點擊區域進行篩選）：</span>
-          <button type="button" class="reset-btn" onclick="filterByArea(${i}, 'ALL')">顯示全部</button>
-        </div>
-        <div class="route-nodes">${nodes}</div>
-      </div>
-    `;
-      }
-
-      panel.innerHTML = `
-    <div class="day-head">
-      <h2>${d.area}</h2>
-      <span class="date">${d.dayNo} ・ ${d.date}</span>
-    </div>
-    <p class="day-brief">${d.brief}</p>
-    <div class="day-grid">
-      <div class="map-wrap">
-        <div class="map-box">
-          <!-- CartoDB 地圖容器 -->
-          <div id="map-leaf-${i}" class="leaflet-map"></div>
-        </div>
-        ${flowHtml}
-      </div>
-      <div>
-        <div class="area-filter-box">
-          <label for="filter-${i}">📍 區域篩選：</label>
-          <select id="filter-${i}" onchange="filterByArea(${i}, this.value)">
-            <option value="ALL">顯示全部地區 (${d.items.length})</option>
-            ${reservedCount > 0 ? `<option value="RESERVED_ONLY">◆ 僅顯示已訂位 (${reservedCount})</option>` : ''}
-            ${areaOptions}
-          </select>
-        </div>
-        ${blocks}
-      </div>
-    </div>
-  `;
-      daysEl.appendChild(panel);
-    });
-
-    // 切換天數與地圖重繪
-    function selectDay(idx) {
-      document.querySelectorAll('.stop').forEach((s, i) => s.setAttribute('aria-selected', i === idx ? 'true' : 'false'));
-      document.querySelectorAll('.day-panel').forEach((p, i) => p.classList.toggle('active', i === idx));
-
-      if (leafletMaps[idx]) {
-        setTimeout(() => leafletMaps[idx].invalidateSize(), 100);
-      } else {
-        setTimeout(() => initLeafletMap(idx, DAYS[idx].routeFlow), 100);
-      }
-
-      window.scrollTo({ top: document.querySelector('.line-nav').offsetTop, behavior: 'smooth' });
-    }
-
-    // 頁面初始化載入 Day 1 地圖
+    // 初始化執行
     window.onload = function () {
-      initLeafletMap(0, DAYS[0].routeFlow);
+      initMap();
+      loadCSVData();
     };
   </script>
 </body>

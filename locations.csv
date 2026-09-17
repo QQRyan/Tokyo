@@ -1,0 +1,37 @@
+day,date,cat,time,name,addr,lat,lng,reserved,area
+Day 1,9/30（三）,move,11:00,成田機場 抵達 → 前往涉谷,,35.771987,140.392850,false,成田機場
+Day 1,9/30（三）,stay,15:00,多美迎飯店 涉谷神宮前 Check-in,6-24-4 Jingumae Shibuya City Tokyo,35.6635,139.7042,false,神宮前6丁目
+Day 1,9/30（三）,shop,,UNITED ARROWS (LUMINE1),1-1-5 Nishishinjuku Shinjuku City Tokyo,35.6895,139.6980,false,西新宿
+Day 1,9/30（三）,shop,,Bshop (LUMINE1),1-1-5 Nishishinjuku Shinjuku City Tokyo,35.6895,139.6980,false,西新宿
+Day 1,9/30（三）,shop,,Snow Peak (LUMINE1),1-1-5 Nishishinjuku Shinjuku City Tokyo,35.6895,139.6980,false,西新宿
+Day 1,9/30（三）,shop,,master-piece (LUMINE2),3-38-2 Shinjuku Shinjuku City Tokyo,35.6900,139.7005,false,新宿
+Day 1,9/30（三）,shop,,BEAMS JAPAN Shinjuku,3-32-6 Shinjuku Shinjuku City Tokyo,35.6908,139.7020,false,新宿
+Day 1,9/30（三）,food,,Ramen Hayashida Shinjuku Shop,3-31-5 Shinjuku Shinjuku City Tokyo,35.6905,139.7030,false,新宿
+Day 1,9/30（三）,food,,Ramen Kamo to Negi - Shinjuku West Exit,1-6-1 Nishi-Shinjuku Shinjuku City Tokyo,35.6920,139.6990,false,西新宿
+Day 1,9/30（三）,food,,Fuunji Shinjuku,2-14-3 Yoyogi Shibuya City Tokyo,35.6865,139.6980,false,代代木2丁目
+Day 1,9/30（三）,food,,Tsukemen Gonokami Seisakusho,5-33-16 Sendagaya Shibuya City Tokyo,35.6811,139.7110,false,千駄谷
+Day 2,10/1（四）,sight,10:00,Meiji Jingu (明治神宮),1-1 Yoyogikamicho Shibuya City Tokyo,35.6836,139.6994,false,代代木1丁目
+Day 2,10/1（四）,food,12:00,Butagumi (豚組),2-24-9 Nishi-Azabu Minato City Tokyo,35.6592,139.7215,true,西麻布2丁目
+Day 2,10/1（四）,shop,,Graphpaper AOYAMA,5-3-2 Minamiaoyama Minato City Tokyo,35.6625,139.7130,false,南青山5丁目
+Day 2,10/1（四）,shop,,Gentle Monster Aoyama Flagship store,5-3-2 Minamiaoyama Minato City Tokyo,35.6625,139.7130,false,南青山5丁目
+Day 2,10/1（四）,shop,,H BEAUTY&YOUTH,3-14-17 Minamiaoyama Minato City Tokyo,35.6680,139.7160,false,南青山3丁目
+Day 2,10/1（四）,food,,AMAM DACOTAN,3-7-6 Kita-Aoyama Minato City Tokyo,35.6672,139.7088,false,北青山3丁目
+Day 2,10/1（四）,shop,,THE H.W. DOG&Co.,5-16-5 Jingumae Shibuya City Tokyo,35.6655,139.7075,false,神宮前5丁目
+Day 2,10/1（四）,shop,,A+S,3-34-8 Jingumae Shibuya City Tokyo,35.6710,139.7090,false,神宮前3丁目
+Day 2,10/1（四）,shop,,UNION TOKYO,2-26-5 Jingumae Shibuya City Tokyo,35.6745,139.7105,false,神宮前2丁目
+Day 2,10/1（四）,shop,,Carhartt WIP Store Harajuku,4-28-25 Jingumae Shibuya City Tokyo,35.6682,139.7095,false,神宮前4丁目
+Day 2,10/1（四）,shop,,GR8,1-11-6 Jingumae Shibuya City Tokyo,35.6705,139.7032,false,神宮前1丁目
+Day 3,10/2（五）,sight,17:00,Shibuya Sky,2-24-12 Shibuya Shibuya City Tokyo,35.6580,139.7016,false,涉谷
+Day 3,10/2（五）,shop,,FREAK'S STORE Shibuya,1-13-1 Jinnan Shibuya City Tokyo,35.6626,139.7001,false,神南
+Day 3,10/2（五）,shop,,Shibuya Parco,15-1 Udagawacho Shibuya City Tokyo,35.6620,139.6985,false,神南
+Day 3,10/2（五）,shop,,VAPE Hills Shibuya Dogenzaka,2-16-3 Dogenzaka Shibuya City Tokyo,35.6582,139.6982,false,道玄坂
+Day 3,10/2（五）,food,,Tsukumo Ramen Ebisu Honten,1-1-10 Hiroo Shibuya City Tokyo,35.6467,139.7101,false,惠比壽
+Day 4,10/3（六）,stay,15:00,神田新飯店 Check-in,Chiyoda-ku Kanda Sudacho 1-16 Tokyo,35.6917,139.7709,false,神田
+Day 4,10/3（六）,food,,Motenashi Kuroki,2-15-8 Kanda Izumicho Chiyoda City Tokyo,35.6980,139.7750,false,神田
+Day 4,10/3（六）,food,,Echiré Maison du Beurre Marunouchi,2-6-1 Marunouchi Chiyoda City Tokyo,35.6812,139.7649,false,丸之內
+Day 5,10/4（日）,sight,,東京鐵塔,4-2-8 Shibakoen Minato City Tokyo,35.6586,139.7454,false,東京鐵塔/芝公園
+Day 5,10/5（日）,shop,,CHILLAXY Azabu,1-8-12 Azabujuban Minato City Tokyo,35.6547,139.7370,false,麻布十番
+Day 5,10/5（日）,food,,Tsujita Ginza,1-4-4 Ginza Chuo City Tokyo,35.6718,139.7650,false,銀座
+Day 6,10/5（一）,sight,,Senso-ji Temple (淺草寺),2-3-1 Asakusa Taito City Tokyo,35.7148,139.7967,false,淺草
+Day 6,10/5（一）,sight,,Ueno Park (上野公園),Uenokoen Taito City Tokyo,35.7146,139.7733,false,上野公園
+Day 7,10/6（二）,move,20:45,IT701 起飛 → TPE 23:25,成田機場,35.771987,140.392850,false,成田機場
