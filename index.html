@@ -266,18 +266,13 @@
         let LOCATION_COORDS = {};
         const leafletMaps = [];
 
-        // 僅用於 Day 圓點導航與 Day 標題的簡化邏輯（自動過濾丁目、合併相同大區域）
-        function getShortAreaName(areaStr) {
-            if (!areaStr) return '';
-            let parts = areaStr.split(/➔|->/).map(s => s.trim());
-            let cleanedParts = parts.map(p => {
-                return p.replace(/\s*\d+丁目?/g, '').trim();
-            });
-            let uniqueParts = [...new Set(cleanedParts.filter(Boolean))];
-            if (uniqueParts.length > 2) {
-                return `${uniqueParts[0]} ➔ ${uniqueParts[1]} 等`;
-            }
-            return uniqueParts.join(' ➔ ') || areaStr;
+        // 依據原本順路區域 Flow 的順序，精準拿掉丁目、保留大地區名稱並按原序串接
+        function getTitleFromFlow(flowArray) {
+            if (!flowArray || flowArray.length === 0) return '';
+            let cleaned = flowArray.map(item => item.replace(/\s*\d+丁目?/g, '').trim());
+            // 保持原順序並過濾重複（若需要保留連續順序中的唯一值可直接用下面這行）
+            let uniqueOrdered = [...new Set(cleaned)];
+            return uniqueOrdered.join(' ➔ ');
         }
 
         function gmaps(name, addr) {
@@ -317,7 +312,6 @@
                     daysMap[dayNo] = {
                         dayNo: dayNo,
                         date: item.date || "",
-                        area: item.dayArea || "", // 原始完整區域（給標題與導航用，但導航會特別轉 short）
                         brief: item.brief || "",
                         routeFlow: item.routeFlow ? item.routeFlow.split(';').map(s => s.trim()) : [],
                         items: []
@@ -350,15 +344,16 @@
             DAYS.forEach((d, i) => {
                 d.items.forEach((it, idx) => it._idx = idx);
 
-                // 【保留】只有頂部導航站點與標題使用簡短名稱
-                const shortArea = getShortAreaName(d.area);
-                const displayTitle = shortArea; 
+                // 產出跟 Flow 一致但去除了丁目的依序大地區標題
+                const flowAreas = d.routeFlow.length ? d.routeFlow : [];
+                const displayTitle = getTitleFromFlow(flowAreas);
 
-                // 1. 建立頂部導航站點（套用短名稱）
+                // 1. 建立頂部導航站點（取標題的第一個大站作為圓點下方文字）
                 const stop = document.createElement('button');
                 stop.className = 'stop';
                 stop.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
-                stop.innerHTML = `<span class="day-no">${d.dayNo}</span><span class="dot"></span><span class="area">${shortArea ? shortArea.split('➔')[0] : ''}</span>`;
+                const firstAreaShort = flowAreas.length ? flowAreas[0].replace(/\s*\d+丁目?/g, '').trim() : '';
+                stop.innerHTML = `<span class="day-no">${d.dayNo}</span><span class="dot"></span><span class="area">${firstAreaShort}</span>`;
                 stop.addEventListener('click', () => selectDay(i));
                 track.appendChild(stop);
 
@@ -385,11 +380,8 @@
                     if (it.area) areaSet.add(it.area);
                 });
 
-                // 這裡的區域篩選（filter）維持原本 CSV 的詳細丁目寫法
-                const areaOptions = Array.from(areaSet).sort().map(a => `<option value="${a}">${a}</option>`).join('');
-                
-                // 這裡的推薦路線（routeFlow）維持原本詳細的丁目寫法
-                const flowAreas = d.routeFlow.length ? d.routeFlow : Array.from(areaSet);
+                // Filter 保持原本完整的丁目名稱與順序
+                const areaOptions = Array.from(areaSet).map(a => `<option value="${a}">${a}</option>`).join('');
                 let flowHtml = '';
 
                 if (flowAreas.length) {
