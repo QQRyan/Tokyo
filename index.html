@@ -309,9 +309,9 @@
 
         let markersLayer = L.layerGroup().addTo(map);
         let allData = [];
-        let markersMap = {}; // 記錄 spotId 對應的 marker
+        let markersMap = {}; 
 
-        // 智慧縮減長名稱（將詳細丁目合併簡化，避免導航與標題太長）
+        // 【新增】智慧縮減長名稱邏輯：自動過濾丁目並合併，使 Day 底下的導航和標題清爽
         function getShortAreaName(areaStr) {
             if (!areaStr) return '';
             let parts = areaStr.split(/➔|->/).map(s => s.trim());
@@ -328,7 +328,7 @@
         // 讀取 CSV 檔案
         fetch('locations.csv')
             .then(response => {
-                if (!response.ok) throw new Error('找不到 locations.csv 檔案，請確認是否與 index.html 放在同資料夾');
+                if (!response.ok) throw new Error('找不到 locations.csv 檔案');
                 return response.text();
             })
             .then(csvText => {
@@ -343,7 +343,6 @@
             const lines = text.split(/\r\n|\n/);
             if (lines.length < 2) return;
 
-            // 解析 CSV Header
             const headers = parseCSVLine(lines[0]);
             
             let rawItems = [];
@@ -357,7 +356,6 @@
                 rawItems.push(item);
             }
 
-            // 依 Day 分組
             let daysMap = {};
             rawItems.forEach(item => {
                 let dayKey = item.day || 'Day 1';
@@ -379,7 +377,6 @@
             renderAllOnMap();
         }
 
-        // 簡易 CSV 行解析（支援雙引號）
         function parseCSVLine(text) {
             let result = [];
             let insideQuote = false;
@@ -399,7 +396,6 @@
             return result.map(s => s.replace(/^"|"$/g, '').trim());
         }
 
-        // 建立左側導航與清單
         function buildUI() {
             const dayNav = document.getElementById('dayNav');
             const container = document.getElementById('itineraryContainer');
@@ -409,26 +405,23 @@
             allData.forEach((d, index) => {
                 const shortArea = getShortAreaName(d.area);
 
-                // 建立頂部導航鈕
+                // 建立頂部導航鈕（套用短名稱）
                 const navBtn = document.createElement('button');
                 navBtn.className = `day-nav-btn ${index === 0 ? 'active' : ''}`;
                 navBtn.innerHTML = `<span class="day-no">${d.dayNo}</span><span class="dot"></span><span class="area">${shortArea}</span>`;
                 navBtn.onclick = () => switchDay(index);
                 dayNav.appendChild(navBtn);
 
-                // 建立對應的 Day Panel
                 const panel = document.createElement('div');
                 panel.className = `day-panel ${index === 0 ? 'active' : ''}`;
                 panel.id = `day-panel-${index}`;
 
-                // 順路 Flow 處理
                 let flowHTML = '';
                 if (d.routeFlow) {
                     let flowItems = d.routeFlow.split(/➔|->/).map(s => `<span class="flow-tag">${s.trim()}</span>`).join(' ➔ ');
                     flowHTML = `<div class="flow-box"><strong>順路：</strong> ${flowItems}</div>`;
                 }
 
-                // 景點卡片
                 let spotsHTML = '';
                 d.spots.forEach((s, sIdx) => {
                     let spotId = `spot-${index}-${sIdx}`;
@@ -447,7 +440,7 @@
 
                 panel.innerHTML = `
                     <div class="day-head">
-                        <h2>${shortArea} <span style="font-size: 13px; font-weight: normal; color: var(--ink-soft);">(${d.area})</span></h2>
+                        <h2>${shortArea}</h2>
                         <span class="date">${d.dayNo} ・ ${d.date}</span>
                     </div>
                     ${flowHTML}
@@ -457,7 +450,6 @@
             });
         }
 
-        // 切換天數
         function switchDay(index) {
             document.querySelectorAll('.day-nav-btn').forEach((btn, idx) => {
                 btn.classList.toggle('active', idx === index);
@@ -466,7 +458,6 @@
                 panel.classList.toggle('active', idx === index);
             });
 
-            // 將地圖視野移動到該天第一個有座標的景點
             let targetDay = allData[index];
             if (targetDay && targetDay.spots.length > 0) {
                 let firstValid = targetDay.spots.find(s => s.lat && s.lng);
@@ -476,7 +467,6 @@
             }
         }
 
-        // 填充頂部區域篩選下拉選單
         function populateAreaFilter() {
             const filterSelect = document.getElementById('areaFilter');
             let areas = new Set();
@@ -499,7 +489,6 @@
             };
         }
 
-        // 依區域篩選
         function filterByArea(selectedArea) {
             markersLayer.clearLayers();
             markersMap = {};
@@ -525,12 +514,10 @@
             });
         }
 
-        // 渲染全部地圖標記
         function renderAllOnMap() {
             filterByArea('ALL');
         }
 
-        // 點擊左側卡片時地圖聚焦與開彈窗
         function focusSpot(lat, lng, spotId) {
             if (!lat || !lng || isNaN(lat) || isNaN(lng)) return;
             map.setView([parseFloat(lat), parseFloat(lng)], 16);
@@ -542,7 +529,6 @@
             }
         }
 
-        // 高亮左側卡片
         function highlightSpotCard(spotId) {
             document.querySelectorAll('.spot-card').forEach(card => card.classList.remove('highlight'));
             let targetCard = document.getElementById(spotId);
