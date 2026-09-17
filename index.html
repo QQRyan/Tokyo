@@ -10,6 +10,11 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Noto+Sans+TC:wght@400;500;600;700&display=swap"
     rel="stylesheet">
+
+  <!-- 引入 Leaflet.js 地圖樣式與 API -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
   <style>
     :root {
       --paper: #F6F3EC;
@@ -243,7 +248,7 @@
 
     .day-grid {
       display: grid;
-      grid-template-columns: 1fr 1.1fr;
+      grid-template-columns: 1.1fr 1fr;
       gap: 22px;
       align-items: start;
     }
@@ -254,7 +259,7 @@
       }
     }
 
-    /* Google My Map 容器 */
+    /* 地圖與互動區域容器 */
     .map-wrap {
       position: sticky;
       top: 16px;
@@ -274,11 +279,26 @@
       box-shadow: var(--shadow);
     }
 
-    .map-box iframe {
+    .leaflet-map {
       width: 100%;
-      height: 440px;
-      border: 0;
-      display: block;
+      height: 420px;
+      z-index: 1;
+    }
+
+    /* 地圖標籤客製化 CSS */
+    .custom-route-icon {
+      background: var(--hanko);
+      color: white;
+      font-weight: bold;
+      font-size: 11px;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid white;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     }
 
     /* 路線地圖 FLOW 圖表 */
@@ -459,12 +479,6 @@
       font-size: 14.5px;
     }
 
-    .spot-note {
-      font-size: 13px;
-      color: var(--ink-soft);
-      margin-top: 2px;
-    }
-
     .spot-addr {
       font-size: 12px;
       color: var(--ink-soft);
@@ -562,20 +576,6 @@
     .unplaced .spot-list {
       max-width: 520px;
     }
-
-    .banner {
-      margin-top: 30px;
-      background: var(--card);
-      border: 1px dashed var(--paper-line);
-      border-radius: var(--radius);
-      padding: 16px 18px;
-      font-size: 12.5px;
-      color: var(--ink-soft);
-    }
-
-    .banner b {
-      color: var(--ink);
-    }
   </style>
 </head>
 
@@ -600,14 +600,44 @@
 
     <div class="unplaced" id="unplacedBox"></div>
 
-    <div class="banner">
-      地圖用的是你自己的 <b>Google 我的地圖</b>。如果地圖沒有顯示出來，代表這份「我的地圖」的共用權限還沒開成「知道連結的人皆可查看」，去地圖右上角「共用」調一下就可以了。<br>
-      有 4 間店（蒼翔、左門、傳屋、斜坡小巷咖啡廳）你給的地址只有「Tokyo, Japan」，先放在最下面「待確認」，麻煩補一下大概地區或分店地址。
-    </div>
-
   </div>
 
   <script>
+    // 各區域的真實經緯度座標數據庫 (Latitude, Longitude)
+    const LOCATION_COORDS = {
+      "神宮前6丁目": [35.6635, 139.7042],
+      "代代木1丁目": [35.6836, 139.6994],
+      "代代木2丁目": [35.6865, 139.6980],
+      "西麻布2丁目": [35.6592, 139.7215],
+      "南青山5丁目": [35.6625, 139.7130],
+      "南青山3丁目": [35.6680, 139.7160],
+      "北青山3丁目": [35.6672, 139.7088],
+      "神宮前5丁目": [35.6655, 139.7075],
+      "神宮前3丁目": [35.6710, 139.7090],
+      "神宮前2丁目": [35.6745, 139.7105],
+      "神宮前4丁目": [35.6682, 139.7095],
+      "神宮前1丁目": [35.6705, 139.7032],
+      "原宿": [35.6702, 139.7027],
+      "表參道": [35.6652, 139.7123],
+      "新宿": [35.6909, 139.7005],
+      "西新宿": [35.6918, 139.6953],
+      "歌舞伎町": [35.6938, 139.7035],
+      "千駄谷": [35.6811, 139.7110],
+      "涉谷": [35.6580, 139.7016],
+      "道玄坂": [35.6582, 139.6982],
+      "神南": [35.6626, 139.7001],
+      "惠比壽": [35.6467, 139.7101],
+      "廣尾": [35.6522, 139.7222],
+      "神田": [35.6917, 139.7709],
+      "丸之內": [35.6812, 139.7649],
+      "銀座": [35.6718, 139.7650],
+      "東京鐵塔/芝公園": [35.6586, 139.7454],
+      "六本木": [35.6628, 139.7314],
+      "麻布十番": [35.6547, 139.7370],
+      "淺草": [35.7148, 139.7967],
+      "上野公園": [35.7146, 139.7733]
+    };
+
     function gmaps(name, addr) {
       const q = encodeURIComponent(addr ? `${name} ${addr}` : name);
       return `https://www.google.com/maps/search/?api=1&query=${q}`;
@@ -619,6 +649,7 @@
       {
         dayNo: "Day 1", date: "9/30（三）", area: "抵達・新宿",
         brief: "下飛機 check-in 後,晚上往新宿逛街吃飯。",
+        routeFlow: ["西新宿", "新宿", "歌舞伎町", "代代木2丁目", "千駄谷"],
         items: [
           { cat: "move", time: "11:00", name: "成田機場 抵達 → 前往涉谷" },
           { cat: "stay", time: "15:00", name: "多美迎飯店 涉谷神宮前 Check-in", addr: "6-24-4 Jingumae, Shibuya City, Tokyo" },
@@ -656,8 +687,7 @@
           { cat: "food", name: "Fuunji Shinjuku", addr: "2-14-3 Yoyogi, Shibuya City, Tokyo" },
           { cat: "food", name: "Tsukemen Gonokami Seisakusho", addr: "5-33-16 Sendagaya, Shibuya City, Tokyo" },
           { cat: "food", name: "Steak Max Shinjuku Chuo-dori", addr: "3-31-7 Shinjuku, Shinjuku City, Tokyo" },
-          { cat: "food", name: "Tanyaki Shinobu", addr: "9 Sanyeicho, Shinjuku City, Tokyo" },
-          { cat: "food", name: "Hotel Thin Crust Pizza (飯店樓下薄皮披薩)", addr: "Shibuya City, Tokyo", vague: true }
+          { cat: "food", name: "Tanyaki Shinobu", addr: "9 Sanyeicho, Shinjuku City, Tokyo" }
         ]
       },
       {
@@ -738,14 +768,13 @@
           { cat: "shop", name: "Kinetics", addr: "1-12-7 Jingumae, Shibuya City, Tokyo" },
           { cat: "shop", name: "NUBIAN HARAJUKU", addr: "1-20-2 Jingumae, Shibuya City, Tokyo" },
           { cat: "shop", name: "HUMAN MADE HARAJUKU", addr: "1-11-6 Jingumae, Shibuya City, Tokyo" },
-          { cat: "food", name: "DE FRITES STAAN HARAJUKU", addr: "1-11-6 Jingumae, Shibuya City, Tokyo" },
-          { cat: "food", name: "Omotesando Yakiniku (表參道高級燒肉)", addr: "Omotesando, Shibuya City, Tokyo", vague: true },
-          { cat: "food", name: "Harajuku / Omotesando Gelato (義式冰淇淋)", addr: "Harajuku, Shibuya City, Tokyo", vague: true }
+          { cat: "food", name: "DE FRITES STAAN HARAJUKU", addr: "1-11-6 Jingumae, Shibuya City, Tokyo" }
         ]
       },
       {
         dayNo: "Day 3", date: "10/2（五）", area: "代官山・中目黑・涉谷",
         brief: "白天代官山、中目黑散步，下午涉谷逛街，傍晚 Shibuya Sky。",
+        routeFlow: ["神南", "道玄坂", "涉谷", "惠比壽", "廣尾"],
         items: [
           { cat: "sight", time: "17:00", name: "Shibuya Sky", addr: "2-24-12 Shibuya, Shibuya City, Tokyo" },
           { cat: "shop", name: "FREAK'S STORE Shibuya", addr: "1-13-1 Jinnan, Shibuya City, Tokyo" },
@@ -762,15 +791,13 @@
           { cat: "food", name: "RaiAn (雷庵)", addr: "1-9-2 Shibuya, Shibuya City, Tokyo" },
           { cat: "food", name: "Tsukumo Ramen Ebisu Honten", addr: "1-1-10 Hiroo, Shibuya City, Tokyo" },
           { cat: "food", name: "AFURI Ebisu", addr: "1-1-7 Ebisunishi, Shibuya City, Tokyo" },
-          { cat: "food", name: "L'Antica Pizzeria da Michele Ebisu branch", addr: "4-4-7 Ebisu, Shibuya City, Tokyo" },
-          { cat: "food", name: "Toripaitan / Shoyu Ramen TY", addr: "Shibuya City, Tokyo", vague: true },
-          { cat: "food", name: "Hidden Tonkatsu Shibuya (隱藏版炸豬排店)", addr: "Shibuya City, Tokyo", vague: true },
-          { cat: "food", name: "Daikanyama Matcha Donut (代官山抹茶甜甜圈)", addr: "Daikanyama, Shibuya City, Tokyo", vague: true }
+          { cat: "food", name: "L'Antica Pizzeria da Michele Ebisu branch", addr: "4-4-7 Ebisu, Shibuya City, Tokyo" }
         ]
       },
       {
         dayNo: "Day 4", date: "10/3（六）", area: "移動日・神田",
         brief: "退房、移動到神田新飯店，附近先吃拉麵跟甜點。",
+        routeFlow: ["神田", "丸之內"],
         items: [
           { cat: "stay", time: "11:00", name: "多美迎飯店 退房" },
           { cat: "stay", time: "15:00", name: "神田新飯店 Check-in", addr: "Chiyoda-ku Kanda Sudacho 1-16, Tokyo" },
@@ -782,6 +809,7 @@
       {
         dayNo: "Day 5", date: "10/4（日）", area: "銀座・東京鐵塔",
         brief: "上午銀座逛街，傍晚東京鐵塔／六本木周邊晚餐。",
+        routeFlow: ["銀座", "東京鐵塔/芝公園", "麻布十番", "六本木"],
         items: [
           { cat: "sight", name: "東京鐵塔" },
           { cat: "shop", name: "LE LABO Tokyo Tower", addr: "4-2-8 Shibakoen, Minato City, Tokyo" },
@@ -795,13 +823,13 @@
           { cat: "food", name: "Don de la Nature", addr: "1-8-13 Ginza, Chuo City, Tokyo" },
           { cat: "food", name: "PST Higashi Azabu", addr: "1-3-8 Higashi-Azabu, Minato City, Tokyo" },
           { cat: "food", name: "Pizzeria da Peppe Napoli Sta' Ca'", addr: "1-11-21 Kamiyacho, Minato City, Tokyo" },
-          { cat: "food", name: "Salon de The Rond - The National Art Center", addr: "7-22-2 Roppongi, Minato City, Tokyo" },
-          { cat: "food", name: "Roppongi Croissant Breakfast (六本木可頌早餐廳)", addr: "Roppongi, Minato City, Tokyo", vague: true }
+          { cat: "food", name: "Salon de The Rond - The National Art Center", addr: "7-22-2 Roppongi, Minato City, Tokyo" }
         ]
       },
       {
         dayNo: "Day 6", date: "10/5（一）", area: "淺草",
         brief: "雷門、仲見世通，順路上野公園。",
+        routeFlow: ["淺草", "上野公園"],
         items: [
           { cat: "sight", name: "Senso-ji Temple", addr: "2-3-1 Asakusa, Taito City, Tokyo" },
           { cat: "sight", name: "Ueno Park", addr: "Uenokoen, Taito City, Tokyo" },
@@ -814,6 +842,7 @@
       {
         dayNo: "Day 7", date: "10/6（二）", area: "返程",
         brief: "退房後前往成田機場。",
+        routeFlow: [],
         items: [
           { cat: "stay", time: "11:00", name: "神田飯店 退房" },
           { cat: "move", time: "17:00", name: "前往成田機場" },
@@ -828,7 +857,6 @@
       "shibuya": "涉谷", "jinnan": "神南", "dogenzaka": "道玄坂",
       "ebisunishi": "惠比壽西", "ebisu": "惠比壽", "hiroo": "広尾",
       "shinjuku": "新宿", "nishishinjuku": "西新宿", "nishi-shinjuku": "西新宿", "kabukicho": "歌舞伎町",
-      // 明治神宮專屬地址關鍵字：明確對應為「代代木1丁目」
       "yoyogikamicho": "代代木1丁目",
       "yoyogi": "代代木",
       "sendagaya": "千駄谷",
@@ -850,9 +878,62 @@
 
     function areaLabel(area, chome) {
       const name = AREA_JP[area.toLowerCase()] || area;
-      // 若字典中已包含完整的丁目（例如「代代木1丁目」），直接返回，不再重複拼接
       if (name.includes('丁目')) return name;
       return chome ? `${name}${chome}丁目` : name;
+    }
+
+    // 儲存 Leaflet Map 實例陣列
+    const leafletMaps = [];
+
+    function initLeafletMap(dayIndex, flowAreas) {
+      const mapContainer = document.getElementById(`map-leaf-${dayIndex}`);
+      if (!mapContainer || !flowAreas || flowAreas.length === 0) return;
+
+      // 1. 初始化地圖
+      const map = L.map(mapContainer).setView([35.665, 139.705], 14);
+
+      // 替換為 Esri 世界街道地圖（完全免費、免 API Key、無浮水印）
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 19,
+        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012'
+      }).addTo(map);
+
+      const latlngs = [];
+      const bounds = L.latLngBounds();
+
+      // 2. 在地圖上繪製數字圓點與路線
+      flowAreas.forEach((areaName, idx) => {
+        const coords = LOCATION_COORDS[areaName];
+        if (coords) {
+          latlngs.push(coords);
+          bounds.extend(coords);
+
+          const customIcon = L.divIcon({
+            className: 'custom-route-icon',
+            html: `<span>${idx + 1}</span>`,
+            iconSize: [22, 22],
+            iconAnchor: [11, 11]
+          });
+
+          L.marker(coords, { icon: customIcon })
+            .addTo(map)
+            .bindPopup(`<b>第 ${idx + 1} 站：${areaName}</b>`);
+        }
+      });
+
+      // 3. 連接點與點（畫紅線）
+      if (latlngs.length > 1) {
+        L.polyline(latlngs, {
+          color: '#B23A2E',
+          weight: 3.5,
+          opacity: 0.85,
+          dashArray: '5, 8'
+        }).addTo(map);
+
+        map.fitBounds(bounds, { padding: [30, 30] });
+      }
+
+      leafletMaps[dayIndex] = map;
     }
 
     // 雙向連動篩選
@@ -860,18 +941,15 @@
       const panel = document.getElementById('panel-' + dayIndex);
       if (!panel) return;
 
-      // 1. 同步 Select 下拉選單
       const selectEl = document.getElementById('filter-' + dayIndex);
       if (selectEl && selectEl.value !== selectedValue) {
         selectEl.value = selectedValue;
       }
 
-      // 2. 同步 Flow 路線按鈕高亮
       panel.querySelectorAll('.node-btn').forEach(btn => {
         btn.classList.toggle('active', btn.getAttribute('data-filter') === selectedValue);
       });
 
-      // 3. 篩選店家 Spot
       const spots = panel.querySelectorAll('.spot');
       spots.forEach(spot => {
         const spotArea = spot.getAttribute('data-area');
@@ -886,7 +964,6 @@
         }
       });
 
-      // 4. 更新分類塊數量與隱藏
       panel.querySelectorAll('.cat-block').forEach(block => {
         const visibleSpots = block.querySelectorAll('.spot:not(.hidden)').length;
         const countSpan = block.querySelector('.cat-title .count');
@@ -909,18 +986,10 @@
         </div>
         ${it.addr ? `<div class="spot-addr">${it.addr}</div>` : ''}
         ${it.reserved ? `<div class="reserved">◆ 已訂位</div>` : ''}
-        ${it.vague ? `<div class="vague">△ 地址不完整</div>` : ''}
         <a class="spot-link" href="${link}" target="_blank" rel="noopener">在 Google 地圖開啟 ↗</a>
       </div>
     </div>`;
     }
-
-    const UNPLACED = [
-      { name: "Sousho Ramen (蒼翔)", addr: "Tokyo, Japan" },
-      { name: "Zamon Oden (左門)", addr: "Tokyo, Japan" },
-      { name: "Denya Tempura (傳屋)", addr: "Tokyo, Japan" },
-      { name: "Slope Alley Cafe (斜坡小巷咖啡廳)", addr: "Tokyo, Japan" }
-    ];
 
     const track = document.getElementById('lineTrack');
     const daysEl = document.getElementById('days');
@@ -950,7 +1019,6 @@
       </div>`;
       }).join('');
 
-      // 收集該日出現的所有區域
       const areaSet = new Set();
       let reservedCount = 0;
       d.items.forEach(it => {
@@ -959,15 +1027,13 @@
         if (parsed) areaSet.add(areaLabel(parsed.area, parsed.chome));
       });
 
-      // 生成選單 Option
       const areaOptions = Array.from(areaSet).sort().map(a => `<option value="${a}">${a}</option>`).join('');
-
-      // 生成 Flow 按鈕 (若未自訂 routeFlow 則預設自動抓取所有 areaSet)
       const flowAreas = d.routeFlow || Array.from(areaSet);
       let flowHtml = '';
+
       if (flowAreas.length) {
         const nodes = flowAreas.map((areaName, idx) => {
-          return `<button type="button" class="node-btn" data-filter="${areaName}" onclick="filterByArea(${i}, '${areaName}')">${areaName}</button>` +
+          return `<button type="button" class="node-btn" data-filter="${areaName}" onclick="filterByArea(${i}, '${areaName}')">${idx + 1}. ${areaName}</button>` +
             (idx < flowAreas.length - 1 ? `<span class="arrow">➔</span>` : '');
         }).join(' ');
 
@@ -991,7 +1057,8 @@
     <div class="day-grid">
       <div class="map-wrap">
         <div class="map-box">
-          <iframe src="https://www.google.com/maps/d/u/0/embed?mid=1Ieasi0StzeGbVa5_p6TNu2KF2GwXaGQ&ehbc=2E312F" loading="lazy"></iframe>
+          <!-- CartoDB 地圖容器 -->
+          <div id="map-leaf-${i}" class="leaflet-map"></div>
         </div>
         ${flowHtml}
       </div>
@@ -1011,26 +1078,24 @@
       daysEl.appendChild(panel);
     });
 
-    const unplacedBox = document.getElementById('unplacedBox');
-    unplacedBox.innerHTML = `
-  <h3>待確認地址</h3>
-  <p>這幾間店你給的地址只有「Tokyo, Japan」，還無法判斷離哪一天的路線比較近：</p>
-  <div class="spot-list">${UNPLACED.map(it => `
-    <div class="spot">
-      <div class="icon-tag icon-food">🍜</div>
-      <div class="spot-body">
-        <span class="spot-name">${it.name}</span>
-        <div class="vague">△ 地址不完整</div>
-        <a class="spot-link" href="${gmaps(it.name, it.addr)}" target="_blank" rel="noopener">在 Google 地圖搜尋 ↗</a>
-      </div>
-    </div>`).join('')}</div>
-`;
-
+    // 切換天數與地圖重繪
     function selectDay(idx) {
       document.querySelectorAll('.stop').forEach((s, i) => s.setAttribute('aria-selected', i === idx ? 'true' : 'false'));
       document.querySelectorAll('.day-panel').forEach((p, i) => p.classList.toggle('active', i === idx));
+
+      if (leafletMaps[idx]) {
+        setTimeout(() => leafletMaps[idx].invalidateSize(), 100);
+      } else {
+        setTimeout(() => initLeafletMap(idx, DAYS[idx].routeFlow), 100);
+      }
+
       window.scrollTo({ top: document.querySelector('.line-nav').offsetTop, behavior: 'smooth' });
     }
+
+    // 頁面初始化載入 Day 1 地圖
+    window.onload = function () {
+      initLeafletMap(0, DAYS[0].routeFlow);
+    };
   </script>
 </body>
 
