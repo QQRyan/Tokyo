@@ -276,9 +276,81 @@
 
     .map-box iframe {
       width: 100%;
-      height: 480px;
+      height: 440px;
       border: 0;
       display: block;
+    }
+
+    /* 路線地圖 FLOW 圖表 */
+    .route-flow {
+      margin-top: 14px;
+      background: var(--card);
+      border: 1px solid var(--paper-line);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      box-shadow: var(--shadow);
+    }
+
+    .route-flow-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .route-flow-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink-soft);
+      letter-spacing: .04em;
+    }
+
+    .reset-btn {
+      font-size: 11px;
+      background: none;
+      border: none;
+      color: var(--yamanote-dark);
+      cursor: pointer;
+      font-weight: 600;
+      padding: 0;
+      text-decoration: underline;
+    }
+
+    .route-nodes {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px 4px;
+      font-size: 12px;
+    }
+
+    .node-btn {
+      background: var(--paper);
+      border: 1px solid var(--paper-line);
+      padding: 3px 9px;
+      border-radius: 12px;
+      font-weight: 600;
+      color: var(--ink);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 11.5px;
+      transition: all .15s ease;
+    }
+
+    .node-btn:hover {
+      border-color: var(--yamanote-dark);
+      color: var(--yamanote-dark);
+    }
+
+    .node-btn.active {
+      background: var(--yamanote-dark);
+      color: #fff;
+      border-color: var(--yamanote-dark);
+    }
+
+    .arrow {
+      color: var(--ink-soft);
+      font-size: 10px;
     }
 
     /* 區域下拉篩選器 */
@@ -589,69 +661,85 @@
         ]
       },
       {
-        dayNo: "Day 2", date: "10/1（四）", area: "原宿・表參道・青山",
-        brief: "上午明治神宮，中午豚組已訂位，下午原宿竹下通、表參道、南青山逛街。",
+        dayNo: "Day 2", date: "10/1（四）", area: "西麻布 ➔ 南青山 ➔ 神宮前 ➔ 原宿",
+        brief: "依紅線規劃：從飯店出發過明治神宮，赴西麻布豚組午餐，再沿南青山、北青山一路逛回神宮前各區。",
+        // 對齊 Day 2 實質出現的 13 個區域，並順著紅線排序
+        routeFlow: [
+          "神宮前6丁目",
+          "代代木",
+          "西麻布2丁目",
+          "南青山5丁目",
+          "南青山3丁目",
+          "北青山3丁目",
+          "神宮前5丁目",
+          "神宮前3丁目",
+          "神宮前2丁目",
+          "神宮前4丁目",
+          "神宮前1丁目",
+          "原宿",
+          "表參道"
+        ],
         items: [
-          { cat: "sight", time: "10:00", name: "Meiji Jingu", addr: "1-1 Yoyogikamicho, Shibuya City, Tokyo" },
-          { cat: "food", time: "12:00", name: "Butagumi", addr: "2-24-9 Nishi-Azabu, Minato City, Tokyo", reserved: true },
-          { cat: "shop", name: "A+S", addr: "3-34-8 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "THE H.W. DOG&Co.", addr: "5-16-5 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "GR8", addr: "1-11-6 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "Kinetics", addr: "1-12-7 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "V.A.", addr: "5-7-4 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "The North Face Standard", addr: "6-10-9 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "H BEAUTY&YOUTH", addr: "3-14-17 Minamiaoyama, Minato City, Tokyo" },
-          { cat: "shop", name: "I'm FREE. Omotesando", addr: "4-26-22 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "HealthyTOKYO CBD Shop & Labo Harajuku Harakado", addr: "6-31-21 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "NUBIAN HARAJUKU", addr: "1-20-2 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "Beams T Harajuku", addr: "3-25-15 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "BEAMS Harajuku", addr: "3-24-7 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "UNION TOKYO", addr: "2-26-5 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "FreshService headquarters", addr: "2-6-7 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "UNITED ARROWS Harajuku Main Store", addr: "3-28-1 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "BerBerJin", addr: "3-26-11 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "atmos Harajuku", addr: "3-22-8 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "Carhartt WIP Store Harajuku", addr: "4-28-25 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "Supreme Harajuku", addr: "4-32-7 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "LE LABO Harajuku", addr: "6-14-2 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "BILLY'S HARAJUKU", addr: "4-28-20 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "atmos URAHARA", addr: "3-18-20 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "retaW store HARAJUKU", addr: "4-26-22 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "HUMAN MADE HARAJUKU", addr: "1-11-6 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "atmos BLUE OMOTESANDO", addr: "4-29-4 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "BRAIN DEAD STUDIOS HARAJUKU", addr: "4-29-8 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "STUDIOUS TOKYO Omotesando", addr: "4-26-32 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "Stüssy Harajuku Chapter", addr: "4-28-2 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "thisisneverthat Tokyo Flagship", addr: "4-27-6 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "Patagonia Shibuya, Tokyo", addr: "6-16-8 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "UNBY GENERAL GOODS STORE TOKYO", addr: "3-18-23 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "MEDICOM TOY PLUS", addr: "4-12-10 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "The Onitsuka Omotesando", addr: "4-24-14 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "Onitsuka Tiger Omotesando Yellow Concept", addr: "4-24-14 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "MoMA Design Store Omotesando", addr: "5-10-1 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "Snow Peak Omotesando", addr: "3-22-8 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "Gramicci Harajuku", addr: "3-25-18 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "Barbour Omotesando", addr: "4-25-15 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "G.B.Gafas SHIBUYA", addr: "6-18-2 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "Tokyu Plaza Harajuku 'Harakado'", addr: "6-31-21 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "NANGA SHOP HARAJUKU", addr: "3-24-5 Jingumae, Shibuya City, Tokyo" },
-          { cat: "shop", name: "KANEKO GANKYO-TEN Omotesando", addr: "4-12-10 Jingumae, Shibuya City, Tokyo" },
+          { cat: "sight", time: "10:00", name: "Meiji Jingu (明治神宮)", addr: "1-1 Yoyogikamicho, Shibuya City, Tokyo" },
+          { cat: "food", time: "12:00", name: "Butagumi (豚組)", addr: "2-24-9 Nishi-Azabu, Minato City, Tokyo", reserved: true },
           { cat: "shop", name: "Graphpaper AOYAMA", addr: "5-3-2 Minamiaoyama, Minato City, Tokyo" },
           { cat: "shop", name: "Gentle Monster Aoyama Flagship store", addr: "5-3-2 Minamiaoyama, Minato City, Tokyo" },
           { cat: "shop", name: "CITY TOKYO Aoyama", addr: "5-4-41 Minamiaoyama, Minato City, Tokyo" },
           { cat: "shop", name: "EYEVAN Tokyo Gallery", addr: "5-13-2 Minamiaoyama, Minato City, Tokyo" },
           { cat: "shop", name: "Eyevol Tokyo Store", addr: "5-12-6 Minamiaoyama, Minato City, Tokyo" },
           { cat: "shop", name: "OPTICAL TAILOR CRADLE Aoyama", addr: "5-7-20 Minamiaoyama, Minato City, Tokyo" },
+          { cat: "shop", name: "H BEAUTY&YOUTH", addr: "3-14-17 Minamiaoyama, Minato City, Tokyo" },
+          { cat: "food", name: "Yanmo", addr: "5-5-25 Minamiaoyama, Minato City, Tokyo" },
+          { cat: "food", name: "AMAM DACOTAN", addr: "3-7-6 Kita-Aoyama, Minato City, Tokyo" },
+          { cat: "food", name: "I'm donut? Omotesando", addr: "3-16-3 Kita-Aoyama, Minato City, Tokyo" },
+          { cat: "shop", name: "THE H.W. DOG&Co.", addr: "5-16-5 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "V.A.", addr: "5-7-4 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "MoMA Design Store Omotesando", addr: "5-10-1 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "The North Face Standard", addr: "6-10-9 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "LE LABO Harajuku", addr: "6-14-2 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "Patagonia Shibuya, Tokyo", addr: "6-16-8 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "G.B.Gafas SHIBUYA", addr: "6-18-2 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "Tokyu Plaza Harajuku 'Harakado'", addr: "6-31-21 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "HealthyTOKYO CBD Shop & Labo Harajuku Harakado", addr: "6-31-21 Jingumae, Shibuya City, Tokyo" },
           { cat: "food", name: "Hamburg Steak under P.Cole (P.Cole 樓下漢堡排)", addr: "5-25-4 Jingumae, Shibuya City, Tokyo" },
-          { cat: "food", name: "DE FRITES STAAN HARAJUKU", addr: "1-11-6 Jingumae, Shibuya City, Tokyo" },
-          { cat: "food", name: "Salmon Bowl Kumada", addr: "3-20-10 Jingumae, Shibuya City, Tokyo" },
-          { cat: "food", name: "Nanadaime tora", addr: "3-22-1 Jingumae, Shibuya City, Tokyo" },
           { cat: "food", name: "Menchirashi", addr: "6-13-7 Jingumae, Shibuya City, Tokyo" },
           { cat: "food", name: "The Teisyoku Shop", addr: "6-14-12 Jingumae, Shibuya City, Tokyo" },
           { cat: "food", name: "BASO OMOTESANDO", addr: "5-11-2 Jingumae, Shibuya City, Tokyo" },
-          { cat: "food", name: "I'm donut? Omotesando", addr: "3-16-3 Kita-Aoyama, Minato City, Tokyo" },
-          { cat: "food", name: "Yanmo", addr: "5-5-25 Minamiaoyama, Minato City, Tokyo" },
-          { cat: "food", name: "AMAM DACOTAN", addr: "3-7-6 Kita-Aoyama, Minato City, Tokyo" },
+          { cat: "shop", name: "A+S", addr: "3-34-8 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "Beams T Harajuku", addr: "3-25-15 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "BEAMS Harajuku", addr: "3-24-7 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "UNITED ARROWS Harajuku Main Store", addr: "3-28-1 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "BerBerJin", addr: "3-26-11 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "atmos Harajuku", addr: "3-22-8 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "atmos URAHARA", addr: "3-18-20 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "UNBY GENERAL GOODS STORE TOKYO", addr: "3-18-23 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "Snow Peak Omotesando", addr: "3-22-8 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "Gramicci Harajuku", addr: "3-25-18 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "NANGA SHOP HARAJUKU", addr: "3-24-5 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "UNION TOKYO", addr: "2-26-5 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "FreshService headquarters", addr: "2-6-7 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "I'm FREE. Omotesando", addr: "4-26-22 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "Carhartt WIP Store Harajuku", addr: "4-28-25 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "Supreme Harajuku", addr: "4-32-7 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "BILLY'S HARAJUKU", addr: "4-28-20 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "retaW store HARAJUKU", addr: "4-26-22 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "atmos BLUE OMOTESANDO", addr: "4-29-4 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "BRAIN DEAD STUDIOS HARAJUKU", addr: "4-29-8 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "STUDIOUS TOKYO Omotesando", addr: "4-26-32 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "Stüssy Harajuku Chapter", addr: "4-28-2 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "thisisneverthat Tokyo Flagship", addr: "4-27-6 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "MEDICOM TOY PLUS", addr: "4-12-10 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "The Onitsuka Omotesando", addr: "4-24-14 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "Onitsuka Tiger Omotesando Yellow Concept", addr: "4-24-14 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "Barbour Omotesando", addr: "4-25-15 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "KANEKO GANKYO-TEN Omotesando", addr: "4-12-10 Jingumae, Shibuya City, Tokyo" },
+          { cat: "food", name: "Salmon Bowl Kumada", addr: "3-20-10 Jingumae, Shibuya City, Tokyo" },
+          { cat: "food", name: "Nanadaime tora", addr: "3-22-1 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "GR8", addr: "1-11-6 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "Kinetics", addr: "1-12-7 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "NUBIAN HARAJUKU", addr: "1-20-2 Jingumae, Shibuya City, Tokyo" },
+          { cat: "shop", name: "HUMAN MADE HARAJUKU", addr: "1-11-6 Jingumae, Shibuya City, Tokyo" },
+          { cat: "food", name: "DE FRITES STAAN HARAJUKU", addr: "1-11-6 Jingumae, Shibuya City, Tokyo" },
           { cat: "food", name: "Omotesando Yakiniku (表參道高級燒肉)", addr: "Omotesando, Shibuya City, Tokyo", vague: true },
           { cat: "food", name: "Harajuku / Omotesando Gelato (義式冰淇淋)", addr: "Harajuku, Shibuya City, Tokyo", vague: true }
         ]
@@ -741,12 +829,13 @@
       "shibuya": "涉谷", "jinnan": "神南", "dogenzaka": "道玄坂",
       "ebisunishi": "惠比壽西", "ebisu": "惠比壽", "hiroo": "広尾",
       "shinjuku": "新宿", "nishishinjuku": "西新宿", "nishi-shinjuku": "西新宿", "kabukicho": "歌舞伎町",
-      "yoyogi": "代代木", "sendagaya": "千駄谷",
+      "yoyogi": "代代木", "yoyogikamicho": "代代木", "sendagaya": "千駄谷",
       "kanda izumicho": "神田和泉町", "interior kanda": "神田", "kanda": "神田", "kanda sudacho": "神田須田町",
       "marunouchi": "丸之內", "ginza": "銀座",
       "shibakoen": "芝公園", "roppongi": "六本木", "kamiyacho": "神谷町",
       "asakusa": "淺草", "nishiasakusa": "西淺草",
-      "uenokoen": "上野公園", "ueno": "上野", "higashikoma": "東駒形"
+      "uenokoen": "上野公園", "ueno": "上野", "higashikoma": "東駒形",
+      "harajuku": "原宿", "omotesando": "表參道"
     };
 
     function parseAddr(addr) {
@@ -762,21 +851,38 @@
       return chome ? `${name}${chome}丁目` : name;
     }
 
-    function filterByArea(dayIndex, selectedArea) {
+    // 雙向連動篩選
+    function filterByArea(dayIndex, selectedValue) {
       const panel = document.getElementById('panel-' + dayIndex);
       if (!panel) return;
 
+      // 1. 同步 Select 下拉選單
+      const selectEl = document.getElementById('filter-' + dayIndex);
+      if (selectEl && selectEl.value !== selectedValue) {
+        selectEl.value = selectedValue;
+      }
+
+      // 2. 同步 Flow 路線按鈕高亮
+      panel.querySelectorAll('.node-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-filter') === selectedValue);
+      });
+
+      // 3. 篩選店家 Spot
       const spots = panel.querySelectorAll('.spot');
       spots.forEach(spot => {
         const spotArea = spot.getAttribute('data-area');
-        if (!selectedArea || selectedArea === 'ALL' || spotArea === selectedArea) {
+        const isReserved = spot.getAttribute('data-reserved') === 'true';
+
+        if (!selectedValue || selectedValue === 'ALL') {
           spot.classList.remove('hidden');
+        } else if (selectedValue === 'RESERVED_ONLY') {
+          spot.classList.toggle('hidden', !isReserved);
         } else {
-          spot.classList.add('hidden');
+          spot.classList.toggle('hidden', spotArea !== selectedValue);
         }
       });
 
-      // 更新分類計數與顯示
+      // 4. 更新分類塊數量與隱藏
       panel.querySelectorAll('.cat-block').forEach(block => {
         const visibleSpots = block.querySelectorAll('.spot:not(.hidden)').length;
         const countSpan = block.querySelector('.cat-title .count');
@@ -790,7 +896,7 @@
       const parsed = parseAddr(it.addr);
       const areaTag = parsed ? areaLabel(parsed.area, parsed.chome) : null;
       return `
-    <div class="spot" id="spot-${dayIndex}-${it._idx}" data-area="${areaTag || ''}">
+    <div class="spot" id="spot-${dayIndex}-${it._idx}" data-area="${areaTag || ''}" data-reserved="${it.reserved ? 'true' : 'false'}">
       <div class="icon-tag icon-${it.cat}">${ICONS[it.cat]}</div>
       <div class="spot-body">
         <div class="spot-top">
@@ -840,13 +946,37 @@
       </div>`;
       }).join('');
 
-      // 收集當天所有出現過的地區標籤
+      // 收集該日出現的所有區域
       const areaSet = new Set();
+      let reservedCount = 0;
       d.items.forEach(it => {
+        if (it.reserved) reservedCount++;
         const parsed = parseAddr(it.addr);
         if (parsed) areaSet.add(areaLabel(parsed.area, parsed.chome));
       });
+
+      // 生成選單 Option
       const areaOptions = Array.from(areaSet).sort().map(a => `<option value="${a}">${a}</option>`).join('');
+
+      // 生成 Flow 按鈕 (若未自訂 routeFlow 則預設自動抓取所有 areaSet)
+      const flowAreas = d.routeFlow || Array.from(areaSet);
+      let flowHtml = '';
+      if (flowAreas.length) {
+        const nodes = flowAreas.map((areaName, idx) => {
+          return `<button type="button" class="node-btn" data-filter="${areaName}" onclick="filterByArea(${i}, '${areaName}')">${areaName}</button>` +
+            (idx < flowAreas.length - 1 ? `<span class="arrow">➔</span>` : '');
+        }).join(' ');
+
+        flowHtml = `
+      <div class="route-flow">
+        <div class="route-flow-header">
+          <span class="route-flow-title">🗺️ 順路區域 Flow（點擊區域進行篩選）：</span>
+          <button type="button" class="reset-btn" onclick="filterByArea(${i}, 'ALL')">顯示全部</button>
+        </div>
+        <div class="route-nodes">${nodes}</div>
+      </div>
+    `;
+      }
 
       panel.innerHTML = `
     <div class="day-head">
@@ -859,16 +989,17 @@
         <div class="map-box">
           <iframe src="https://www.google.com/maps/d/u/0/embed?mid=1Ieasi0StzeGbVa5_p6TNu2KF2GwXaGQ&ehbc=2E312F" loading="lazy"></iframe>
         </div>
+        ${flowHtml}
       </div>
       <div>
-        ${areaSet.size > 0 ? `
         <div class="area-filter-box">
           <label for="filter-${i}">📍 區域篩選：</label>
           <select id="filter-${i}" onchange="filterByArea(${i}, this.value)">
             <option value="ALL">顯示全部地區 (${d.items.length})</option>
+            ${reservedCount > 0 ? `<option value="RESERVED_ONLY">◆ 僅顯示已訂位 (${reservedCount})</option>` : ''}
             ${areaOptions}
           </select>
-        </div>` : ''}
+        </div>
         ${blocks}
       </div>
     </div>
