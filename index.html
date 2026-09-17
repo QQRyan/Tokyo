@@ -663,10 +663,9 @@
       {
         dayNo: "Day 2", date: "10/1（四）", area: "西麻布 ➔ 南青山 ➔ 神宮前 ➔ 原宿",
         brief: "依紅線規劃：從飯店出發過明治神宮，赴西麻布豚組午餐，再沿南青山、北青山一路逛回神宮前各區。",
-        // 對齊 Day 2 實質出現的 13 個區域，並順著紅線排序
         routeFlow: [
           "神宮前6丁目",
-          "代代木",
+          "代代木1丁目",
           "西麻布2丁目",
           "南青山5丁目",
           "南青山3丁目",
@@ -829,7 +828,10 @@
       "shibuya": "涉谷", "jinnan": "神南", "dogenzaka": "道玄坂",
       "ebisunishi": "惠比壽西", "ebisu": "惠比壽", "hiroo": "広尾",
       "shinjuku": "新宿", "nishishinjuku": "西新宿", "nishi-shinjuku": "西新宿", "kabukicho": "歌舞伎町",
-      "yoyogi": "代代木", "yoyogikamicho": "代代木", "sendagaya": "千駄谷",
+      // 明治神宮專屬地址關鍵字：明確對應為「代代木1丁目」
+      "yoyogikamicho": "代代木1丁目",
+      "yoyogi": "代代木",
+      "sendagaya": "千駄谷",
       "kanda izumicho": "神田和泉町", "interior kanda": "神田", "kanda": "神田", "kanda sudacho": "神田須田町",
       "marunouchi": "丸之內", "ginza": "銀座",
       "shibakoen": "芝公園", "roppongi": "六本木", "kamiyacho": "神谷町",
@@ -848,6 +850,8 @@
 
     function areaLabel(area, chome) {
       const name = AREA_JP[area.toLowerCase()] || area;
+      // 若字典中已包含完整的丁目（例如「代代木1丁目」），直接返回，不再重複拼接
+      if (name.includes('丁目')) return name;
       return chome ? `${name}${chome}丁目` : name;
     }
 
