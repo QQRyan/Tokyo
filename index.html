@@ -265,6 +265,7 @@
         let LOCATION_COORDS = {};
         const leafletMaps = [];
 
+        // 標題顯示：把 Flow 陣列裡的「丁目」字眼過濾掉，作為大標題
         function getTitleFromFlow(flowArray) {
             if (!flowArray || flowArray.length === 0) return '';
             let cleaned = flowArray.map(item => item.replace(/\d+丁目/g, '').trim());
@@ -295,28 +296,20 @@
 
             const headers = lines[0].split(',').map(h => h.trim());
             const daysMap = {};
-            const rawRows = [];
 
             for (let i = 1; i < lines.length; i++) {
                 const row = lines[i].split(',').map(v => v.trim());
                 if (row.length < headers.length) continue;
+                
                 let item = {};
                 headers.forEach((h, idx) => item[h] = row[idx]);
-                rawRows.push(item);
 
-                if (item.area && item.lat && item.lng) {
-                    LOCATION_COORDS[item.area] = [parseFloat(item.lat), parseFloat(item.lng)];
-                }
-            }
-
-            rawRows.forEach(item => {
                 const dayNo = item.day;
                 if (!daysMap[dayNo]) {
                     daysMap[dayNo] = {
                         dayNo: dayNo,
                         date: item.date || "",
                         brief: item.brief || "",
-                        rawFlow: item.routeFlow ? item.routeFlow.split(';').map(s => s.trim()) : [],
                         items: []
                     };
                 }
@@ -329,17 +322,11 @@
                     area: item.area || "",
                     reserved: item.reserved === 'true'
                 });
-            });
 
-            Object.values(daysMap).forEach(d => {
-                const validAreas = new Set(d.items.map(it => it.area).filter(Boolean));
-                
-                d.routeFlow = d.rawFlow.map(flowName => {
-                    if (validAreas.has(flowName)) return flowName;
-                    let matched = Array.from(validAreas).find(a => a.includes(flowName) || flowName.includes(a));
-                    return matched ? matched : flowName;
-                });
-            });
+                if (item.area && item.lat && item.lng) {
+                    LOCATION_COORDS[item.area] = [parseFloat(item.lat), parseFloat(item.lng)];
+                }
+            }
 
             DAYS = Object.values(daysMap);
         }
@@ -353,9 +340,21 @@
             DAYS.forEach((d, i) => {
                 d.items.forEach((it, idx) => it._idx = idx);
 
-                const flowAreas = d.routeFlow.length ? d.routeFlow : [];
+                // 完全以 filter 的內容 (即該天行程有的真實 area) 為主來生成 Flow
+                const areaSet = new Set();
+                let reservedCount = 0;
+                d.items.forEach(it => {
+                    if (it.reserved) reservedCount++;
+                    if (it.area) areaSet.add(it.area);
+                });
+
+                // flowAreas 就是 Filter 裡不重複的選項！100% 精準對齊！
+                const flowAreas = Array.from(areaSet);
+                d.routeFlow = flowAreas; // 存入物件中給地圖生成時使用
+                
                 const displayTitle = getTitleFromFlow(flowAreas);
 
+                // 導航站點 (Day下面的文字已經刪掉，只保留圓點)
                 const stop = document.createElement('button');
                 stop.className = 'stop';
                 stop.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
@@ -378,16 +377,11 @@
                     </div>`;
                 }).join('');
 
-                const areaSet = new Set();
-                let reservedCount = 0;
-                d.items.forEach(it => {
-                    if (it.reserved) reservedCount++;
-                    if (it.area) areaSet.add(it.area);
-                });
-
-                const areaOptions = Array.from(areaSet).map(a => `<option value="${a}">${a}</option>`).join('');
+                // 根據 flowAreas 產生 Filter 下拉選項
+                const areaOptions = flowAreas.map(a => `<option value="${a}">${a}</option>`).join('');
+                
+                // 根據同一個 flowAreas 產生 順路區域 Flow 按鈕
                 let flowHtml = '';
-
                 if (flowAreas.length) {
                     const nodes = flowAreas.map((areaName, idx) => {
                         return `<button type="button" class="node-btn" data-area="${areaName}">${idx + 1}. ${areaName}</button>` +
@@ -449,6 +443,7 @@
                 });
             });
 
+            // 初始化第一天的地圖
             initLeafletMap(0, DAYS[0].routeFlow);
         }
 
