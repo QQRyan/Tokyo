@@ -543,7 +543,7 @@
             const spots = panel.querySelectorAll('.spot');
             spots.forEach(spot => {
                 const spotArea = spot.getAttribute('data-area');
-                const isReserved = spot.getAttribute('data-reserved'] === 'true';
+                const isReserved = spot.getAttribute('data-reserved') === 'true';
 
                 if (!selectedValue || selectedValue === 'ALL') {
                     spot.classList.remove('hidden');
