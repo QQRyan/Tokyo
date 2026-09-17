@@ -265,11 +265,13 @@
         let LOCATION_COORDS = {};
         const leafletMaps = [];
 
-        // 標題顯示：把 Flow 陣列裡的「丁目」字眼過濾掉，作為大標題
+        // 標題顯示：移除「丁目」並進行「自動去重複」，確保標題簡潔無重複
         function getTitleFromFlow(flowArray) {
             if (!flowArray || flowArray.length === 0) return '';
             let cleaned = flowArray.map(item => item.replace(/\d+丁目/g, '').trim());
-            return cleaned.join(' ➔ ');
+            // 使用 Set 保留出現順序且自動去重
+            let unique = [...new Set(cleaned)].filter(Boolean);
+            return unique.join(' ➔ ');
         }
 
         function gmaps(name, addr) {
@@ -340,7 +342,7 @@
             DAYS.forEach((d, i) => {
                 d.items.forEach((it, idx) => it._idx = idx);
 
-                // 完全以 filter 的內容 (即該天行程有的真實 area) 為主來生成 Flow
+                // 收集當天出現過的所有區域
                 const areaSet = new Set();
                 let reservedCount = 0;
                 d.items.forEach(it => {
@@ -348,13 +350,13 @@
                     if (it.area) areaSet.add(it.area);
                 });
 
-                // flowAreas 就是 Filter 裡不重複的選項！100% 精準對齊！
                 const flowAreas = Array.from(areaSet);
-                d.routeFlow = flowAreas; // 存入物件中給地圖生成時使用
+                d.routeFlow = flowAreas;
                 
+                // 動態生成簡化且去重後的大標題
                 const displayTitle = getTitleFromFlow(flowAreas);
 
-                // 導航站點 (Day下面的文字已經刪掉，只保留圓點)
+                // 頂部日曆按鈕
                 const stop = document.createElement('button');
                 stop.className = 'stop';
                 stop.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
@@ -377,10 +379,8 @@
                     </div>`;
                 }).join('');
 
-                // 根據 flowAreas 產生 Filter 下拉選項
                 const areaOptions = flowAreas.map(a => `<option value="${a}">${a}</option>`).join('');
                 
-                // 根據同一個 flowAreas 產生 順路區域 Flow 按鈕
                 let flowHtml = '';
                 if (flowAreas.length) {
                     const nodes = flowAreas.map((areaName, idx) => {
@@ -443,7 +443,6 @@
                 });
             });
 
-            // 初始化第一天的地圖
             initLeafletMap(0, DAYS[0].routeFlow);
         }
 
