@@ -281,22 +281,53 @@
             return R * c;
         }
 
-        // 使用 Nearest Neighbor 演算法優化路線，以第一個區域為起點，每次尋找最近的下一個未造訪區域
-        function optimizeRoute(flowAreas) {
-            if (flowAreas.length <= 1) return flowAreas;
-            
-            const unvisited = [...flowAreas];
+        // 使用 Nearest Neighbor 演算法優化路線，並加入每日飯店起點與 Day 2 特殊規則
+        function optimizeRoute(flowAreas, dayNo) {
+            if (flowAreas.length === 0) return flowAreas;
+
+            let areas = [...flowAreas];
+
+            // 1. 決定每天的起點飯店（Day 1 除外，因為剛抵達）
+            let hotel = null;
+            if (dayNo === "Day 2" || dayNo === "Day 3") {
+                hotel = "神宮前6丁目"; // 多美迎飯店 涉谷神宮前
+            } else if (dayNo === "Day 4" || dayNo === "Day 5" || dayNo === "Day 6" || dayNo === "Day 7") {
+                hotel = "神田須田町1丁目"; // 神田新飯店
+            }
+
+            // 如果有設定起點飯店，將其從列表中移出並移到最前面，確保為第 1 站
+            if (hotel) {
+                areas = areas.filter(a => a !== hotel);
+                areas.unshift(hotel);
+            }
+
+            if (areas.length <= 1) return areas;
+
             const optimized = [];
-            
-            // 以原始陣列的第一個區域為起點
+            const unvisited = [...areas];
+
+            // 起點一定是第一個
             let current = unvisited.shift();
             optimized.push(current);
-            
+
+            // 2. Day 2 特殊規則：起點飯店 -> 西麻布2丁目 -> 其它地區 (由南往北 Nearest Neighbor)
+            if (dayNo === "Day 2") {
+                const targetSecond = "西麻布2丁目";
+                if (unvisited.includes(targetSecond)) {
+                    // 將 西麻布2丁目 移出 unvisited，作為第 2 站
+                    const idx = unvisited.indexOf(targetSecond);
+                    unvisited.splice(idx, 1);
+                    current = targetSecond;
+                    optimized.push(current);
+                }
+            }
+
+            // 3. 執行標準 Nearest Neighbor 尋找最近的下一個未造訪區域
             while (unvisited.length > 0) {
                 let nearestIndex = -1;
                 let minDistance = Infinity;
                 const currentCoords = LOCATION_COORDS[current];
-                
+
                 for (let i = 0; i < unvisited.length; i++) {
                     const coords = LOCATION_COORDS[unvisited[i]];
                     if (currentCoords && coords) {
@@ -312,7 +343,7 @@
                         }
                     }
                 }
-                
+
                 if (nearestIndex !== -1) {
                     current = unvisited.splice(nearestIndex, 1)[0];
                     optimized.push(current);
@@ -409,7 +440,7 @@
                     if (it.area) areaSet.add(it.area);
                 });
 
-                const flowAreas = optimizeRoute(Array.from(areaSet));
+                const flowAreas = optimizeRoute(Array.from(areaSet), d.dayNo);
                 d.routeFlow = flowAreas;
                 
                 // 動態生成簡化且去重後的大標題
