@@ -310,14 +310,22 @@
             let current = unvisited.shift();
             optimized.push(current);
 
-            // 2. Day 2 特殊規則：起點飯店 -> 西麻布2丁目 -> 其它地區 (由南往北 Nearest Neighbor)
+            // 2. Day 2 特殊規則：起點飯店 -> 代代木神園町 (明治神宮) -> 西麻布2丁目 (午餐) -> 其它地區 (由南往北 Nearest Neighbor)
             if (dayNo === "Day 2") {
-                const targetSecond = "西麻布2丁目";
+                const targetSecond = "代代木神園町";
+                const targetThird = "西麻布2丁目";
+
                 if (unvisited.includes(targetSecond)) {
-                    // 將 西麻布2丁目 移出 unvisited，作為第 2 站
                     const idx = unvisited.indexOf(targetSecond);
                     unvisited.splice(idx, 1);
                     current = targetSecond;
+                    optimized.push(current);
+                }
+
+                if (unvisited.includes(targetThird)) {
+                    const idx = unvisited.indexOf(targetThird);
+                    unvisited.splice(idx, 1);
+                    current = targetThird;
                     optimized.push(current);
                 }
             }
@@ -419,6 +427,45 @@
                     LOCATION_COORDS[item.area] = [parseFloat(item.lat), parseFloat(item.lng)];
                 }
             }
+
+            // 確保起點飯店經緯度存在
+            LOCATION_COORDS["神宮前6丁目"] = LOCATION_COORDS["神宮前6丁目"] || [35.6635, 139.7042];
+            LOCATION_COORDS["神田須田町1丁目"] = LOCATION_COORDS["神田須田町1丁目"] || [35.6917, 139.7709];
+
+            // 注入每日的起點飯店虛擬景點（若當日尚未包含該飯店）
+            Object.values(daysMap).forEach(d => {
+                let hotelArea = null;
+                let hotelItem = null;
+
+                if (d.dayNo === "Day 2" || d.dayNo === "Day 3") {
+                    hotelArea = "神宮前6丁目";
+                    hotelItem = {
+                        cat: "stay",
+                        time: "09:00",
+                        name: "多美迎飯店 涉谷神宮前 (今日起點)",
+                        addr: "6-24-4 Jingumae Shibuya City Tokyo",
+                        area: "神宮前6丁目",
+                        reserved: false
+                    };
+                } else if (d.dayNo === "Day 5" || d.dayNo === "Day 6" || d.dayNo === "Day 7") {
+                    hotelArea = "神田須田町1丁目";
+                    hotelItem = {
+                        cat: "stay",
+                        time: "09:00",
+                        name: "神田新飯店 (今日起點)",
+                        addr: "Chiyoda-ku Kanda Sudacho 1-16 Tokyo",
+                        area: "神田須田町1丁目",
+                        reserved: false
+                    };
+                }
+
+                if (hotelArea && hotelItem) {
+                    const hasHotel = d.items.some(it => it.area === hotelArea && it.cat === "stay");
+                    if (!hasHotel) {
+                        d.items.unshift(hotelItem); // 放到第一個
+                    }
+                }
+            });
 
             DAYS = Object.values(daysMap);
         }
