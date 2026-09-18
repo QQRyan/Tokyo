@@ -95,14 +95,14 @@
         .line-nav { position: relative; padding: 24px 4px 10px; margin-bottom: 6px; overflow-x: auto; }
         .line-track { position: relative; display: flex; min-width: 680px; justify-content: space-between; padding: 0 6px; }
         .line-track::before {
-            content: ""; position: absolute; left: 6px; right: 6px; top: 11px;
+            content: ""; position: absolute; left: 6px; right: 6px; top: 10px;
             height: 4px; background: var(--yamanote); border-radius: 2px;
         }
 
         .stop {
             position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px;
             background: none; border: none; cursor: pointer; font-family: inherit; color: var(--ink-soft);
-            padding: 0 4px; flex: 1;
+            padding: 4px 4px 0 4px; flex: 1;
         }
 
         .stop .dot {
@@ -265,6 +265,65 @@
         let LOCATION_COORDS = {};
         const leafletMaps = [];
 
+        // 算出兩個經緯度之間的 Haversine 距離（單位：公里）
+        function getHaversineDistance(coords1, coords2) {
+            if (!coords1 || !coords2) return Infinity;
+            const [lat1, lon1] = coords1;
+            const [lat2, lon2] = coords2;
+            const R = 6371; // 地球半徑（公里）
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = 
+                Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        // 使用 Nearest Neighbor 演算法優化路線，以第一個區域為起點，每次尋找最近的下一個未造訪區域
+        function optimizeRoute(flowAreas) {
+            if (flowAreas.length <= 1) return flowAreas;
+            
+            const unvisited = [...flowAreas];
+            const optimized = [];
+            
+            // 以原始陣列的第一個區域為起點
+            let current = unvisited.shift();
+            optimized.push(current);
+            
+            while (unvisited.length > 0) {
+                let nearestIndex = -1;
+                let minDistance = Infinity;
+                const currentCoords = LOCATION_COORDS[current];
+                
+                for (let i = 0; i < unvisited.length; i++) {
+                    const coords = LOCATION_COORDS[unvisited[i]];
+                    if (currentCoords && coords) {
+                        const dist = getHaversineDistance(currentCoords, coords);
+                        if (dist < minDistance) {
+                            minDistance = dist;
+                            nearestIndex = i;
+                        }
+                    } else {
+                        // 若無經緯度，則作為預設候選
+                        if (nearestIndex === -1) {
+                            nearestIndex = i;
+                        }
+                    }
+                }
+                
+                if (nearestIndex !== -1) {
+                    current = unvisited.splice(nearestIndex, 1)[0];
+                    optimized.push(current);
+                } else {
+                    current = unvisited.shift();
+                    optimized.push(current);
+                }
+            }
+            return optimized;
+        }
+
         // 標題顯示：移除「丁目」並進行「自動去重複」，確保標題簡潔無重複
         function getTitleFromFlow(flowArray) {
             if (!flowArray || flowArray.length === 0) return '';
@@ -350,7 +409,7 @@
                     if (it.area) areaSet.add(it.area);
                 });
 
-                const flowAreas = Array.from(areaSet);
+                const flowAreas = optimizeRoute(Array.from(areaSet));
                 d.routeFlow = flowAreas;
                 
                 // 動態生成簡化且去重後的大標題
@@ -360,7 +419,7 @@
                 const stop = document.createElement('button');
                 stop.className = 'stop';
                 stop.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
-                stop.innerHTML = `<span class="day-no">${d.dayNo}</span><span class="dot"></span>`;
+                stop.innerHTML = `<span class="dot"></span><span class="day-no">${d.dayNo}</span>`;
                 stop.addEventListener('click', () => selectDay(i));
                 track.appendChild(stop);
 
