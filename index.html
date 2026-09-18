@@ -410,7 +410,25 @@
             const daysMap = {};
 
             for (let i = 1; i < lines.length; i++) {
-                const row = lines[i].split(',').map(v => v.trim());
+                const line = lines[i].trim();
+                if (!line) continue;
+
+                // 支援引號與逗號的強健 CSV 分割
+                const row = [];
+                let insideQuote = false;
+                let entry = "";
+                for (let c of line) {
+                    if (c === '"') {
+                        insideQuote = !insideQuote;
+                    } else if (c === ',' && !insideQuote) {
+                        row.push(entry.trim());
+                        entry = "";
+                    } else {
+                        entry += c;
+                    }
+                }
+                row.push(entry.trim());
+
                 if (row.length < headers.length) continue;
                 
                 let item = {};
