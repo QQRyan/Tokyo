@@ -281,7 +281,47 @@
             return R * c;
         }
 
-        // 使用 Nearest Neighbor 演算法優化路線，並加入每日飯店起點與 Day 2 特殊規則
+        // 使用 DFS + 剪枝來尋找絕對最短路徑（解決 TSP 貪婪演算法陷阱，確保完全不繞路、不交叉）
+        function findShortestPath(startLocation, remainingAreas) {
+            if (remainingAreas.length === 0) return [];
+            if (remainingAreas.length === 1) return [...remainingAreas];
+
+            let bestPath = [];
+            let minDistance = Infinity;
+
+            function permute(currentPath, currentLoc, currentDist, unvisited) {
+                // 剪枝：若當前距離已大於等於目前最優距離，直接返回
+                if (currentDist >= minDistance) return;
+
+                if (unvisited.length === 0) {
+                    minDistance = currentDist;
+                    bestPath = [...currentPath];
+                    return;
+                }
+
+                for (let i = 0; i < unvisited.length; i++) {
+                    const nextLoc = unvisited[i];
+                    const coords1 = LOCATION_COORDS[currentLoc];
+                    const coords2 = LOCATION_COORDS[nextLoc];
+                    const d = getHaversineDistance(coords1, coords2);
+
+                    currentPath.push(nextLoc);
+                    // 建立不含當前元素的未造訪陣列
+                    const nextUnvisited = [];
+                    for (let j = 0; j < unvisited.length; j++) {
+                        if (j !== i) nextUnvisited.push(unvisited[j]);
+                    }
+
+                    permute(currentPath, nextLoc, currentDist + d, nextUnvisited);
+                    currentPath.pop();
+                }
+            }
+
+            permute([], startLocation, 0, remainingAreas);
+            return bestPath;
+        }
+
+        // 優化路線：結合起點飯店、客製化規則與最優 TSP 求解器
         function optimizeRoute(flowAreas, dayNo) {
             if (flowAreas.length === 0) return flowAreas;
 
@@ -310,7 +350,7 @@
             let current = unvisited.shift();
             optimized.push(current);
 
-            // 2. Day 2 特殊規則：起點飯店 -> 代代木神園町 (明治神宮) -> 西麻布2丁目 (午餐) -> 其它地區 (由南往北 Nearest Neighbor)
+            // 2. Day 2 特殊規則：起點飯店 -> 代代木神園町 (明治神宮) -> 西麻布2丁目 (午餐)
             if (dayNo === "Day 2") {
                 const targetSecond = "代代木神園町";
                 const targetThird = "西麻布2丁目";
@@ -330,37 +370,9 @@
                 }
             }
 
-            // 3. 執行標準 Nearest Neighbor 尋找最近的下一個未造訪區域
-            while (unvisited.length > 0) {
-                let nearestIndex = -1;
-                let minDistance = Infinity;
-                const currentCoords = LOCATION_COORDS[current];
-
-                for (let i = 0; i < unvisited.length; i++) {
-                    const coords = LOCATION_COORDS[unvisited[i]];
-                    if (currentCoords && coords) {
-                        const dist = getHaversineDistance(currentCoords, coords);
-                        if (dist < minDistance) {
-                            minDistance = dist;
-                            nearestIndex = i;
-                        }
-                    } else {
-                        // 若無經緯度，則作為預設候選
-                        if (nearestIndex === -1) {
-                            nearestIndex = i;
-                        }
-                    }
-                }
-
-                if (nearestIndex !== -1) {
-                    current = unvisited.splice(nearestIndex, 1)[0];
-                    optimized.push(current);
-                } else {
-                    current = unvisited.shift();
-                    optimized.push(current);
-                }
-            }
-            return optimized;
+            // 3. 呼叫 DFS TSP 求解器尋找其餘地區的絕對最短路徑
+            const restOptimal = findShortestPath(current, unvisited);
+            return optimized.concat(restOptimal);
         }
 
         // 標題顯示：移除「丁目」並進行「自動去重複」，確保標題簡潔無重複
