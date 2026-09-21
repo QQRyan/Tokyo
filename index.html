@@ -230,9 +230,21 @@
         }
 
         .icon-food { background: rgba(178, 58, 46, .12); color: var(--hanko); }
+        .icon-cafe { background: rgba(139, 69, 19, .12); color: #8B4513; }
         .icon-shop { background: rgba(122, 106, 156, .14); color: var(--shop); }
         .icon-sight { background: rgba(143, 174, 60, .16); color: var(--yamanote-dark); }
         .icon-stay, .icon-move { background: rgba(91, 107, 120, .12); color: var(--ink-soft); }
+
+        .spot-note {
+            font-size: 11.5px;
+            color: #8B4513;
+            background: rgba(139, 69, 19, 0.06);
+            border-radius: var(--radius);
+            padding: 3px 8px;
+            margin-top: 6px;
+            display: inline-block;
+            font-weight: 500;
+        }
     </style>
 </head>
 
@@ -258,8 +270,8 @@
     </div>
 
     <script>
-        const ICONS = { food: "🍜", shop: "🛍️", sight: "⛩️", stay: "🏨", move: "➡️" };
-        const CAT_LABEL = { food: "美食", shop: "購物", sight: "景點", stay: "住宿", move: "移動" };
+        const ICONS = { food: "🍜", cafe: "☕", shop: "🛍️", sight: "⛩️", stay: "🏨", move: "➡️" };
+        const CAT_LABEL = { food: "美食", cafe: "咖啡甜點", shop: "購物", sight: "景點", stay: "住宿", move: "移動" };
 
         let DAYS = [];
         let LOCATION_COORDS = {};
@@ -535,7 +547,7 @@
                 panel.className = 'day-panel' + (i === 0 ? ' active' : '');
                 panel.id = 'panel-' + i;
 
-                const cats = ['sight', 'food', 'shop', 'stay', 'move'];
+                const cats = ['sight', 'food', 'cafe', 'shop', 'stay', 'move'];
                 const blocks = cats.map(cat => {
                     const list = d.items.filter(it => it.cat === cat);
                     if (!list.length) return '';
@@ -625,6 +637,7 @@
                     </div>
                     ${it.addr ? `<div class="spot-addr">${it.addr}</div>` : ''}
                     ${it.reserved ? `<div class="reserved">◆ 已訂位</div>` : ''}
+                    ${it.note ? `<div class="spot-note">📝 ${it.note}</div>` : ''}
                     <a class="spot-link" href="${link}" target="_blank" rel="noopener">在 Google 地圖開啟 ↗</a>
                 </div>
             </div>`;
