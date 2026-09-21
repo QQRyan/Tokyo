@@ -342,9 +342,9 @@
 
             // 1. 決定每天的起點飯店（Day 1 除外，因為剛抵達）
             let hotel = null;
-            if (dayNo === "Day 2" || dayNo === "Day 3") {
-                hotel = "神宮前6丁目"; // 多美迎飯店 涉谷神宮前
-            } else if (dayNo === "Day 4" || dayNo === "Day 5" || dayNo === "Day 6" || dayNo === "Day 7") {
+            if (dayNo === "Day 2" || dayNo === "Day 3" || dayNo === "Day 4") {
+                hotel = "神宮前6丁目"; // 多美迎飯店 涉谷神宮前 (Day 4 早上在此 check-out，仍以此為起點)
+            } else if (dayNo === "Day 5" || dayNo === "Day 6" || dayNo === "Day 7") {
                 hotel = "神田須田町1丁目"; // 神田新飯店
             }
 
@@ -483,7 +483,7 @@
                 let hotelArea = null;
                 let hotelItem = null;
 
-                if (d.dayNo === "Day 2" || d.dayNo === "Day 3") {
+                if (d.dayNo === "Day 2" || d.dayNo === "Day 3" || d.dayNo === "Day 4") {
                     hotelArea = "神宮前6丁目";
                     hotelItem = {
                         cat: "stay",
