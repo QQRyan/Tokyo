@@ -279,9 +279,10 @@
 
         // 算出兩個經緯度之間的 Haversine 距離（單位：公里）
         function getHaversineDistance(coords1, coords2) {
-            if (!coords1 || !coords2) return Infinity;
-            const [lat1, lon1] = coords1;
-            const [lat2, lon2] = coords2;
+            const c1 = coords1 || [35.6635, 139.7042];
+            const c2 = coords2 || [35.6635, 139.7042];
+            const [lat1, lon1] = c1;
+            const [lat2, lon2] = c2;
             const R = 6371; // 地球半徑（公里）
             const dLat = (lat2 - lat1) * Math.PI / 180;
             const dLon = (lon2 - lon1) * Math.PI / 180;
@@ -441,7 +442,10 @@
                 }
                 row.push(entry.trim());
 
-                if (row.length < headers.length) continue;
+                // 補足缺失的後半段空欄位（例如未設定 note 的欄位）
+                while (row.length < headers.length) {
+                    row.push("");
+                }
                 
                 let item = {};
                 headers.forEach((h, idx) => item[h] = row[idx]);
