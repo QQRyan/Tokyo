@@ -651,33 +651,57 @@
                         ${flowHtml}
                     </div>
                     <div>
-                        <div class="area-filter-box">
-                            <label for="filter-${i}">📍 區域篩選：</label>
-                            <select id="filter-${i}">
-                                <option value="ALL">顯示全部地區 (${d.items.length})</option>
-                                ${reservedCount > 0 ? `<option value="RESERVED_ONLY">◆ 僅顯示已訂位 (${reservedCount})</option>` : ''}
-                                ${areaOptions}
-                            </select>
+                        <div class="filters-row" style="display: flex; gap: 12px; margin-bottom: 16px;">
+                            <div class="area-filter-box" style="flex: 1;">
+                                <label for="filter-area-${i}" style="font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 6px; display: block;">📍 區域篩選：</label>
+                                <select id="filter-area-${i}" style="width: 100%; padding: 8px 12px; border: 1px solid var(--paper-line); border-radius: var(--radius); background: var(--paper); color: var(--ink); font-family: inherit; font-size: 13.5px; cursor: pointer;">
+                                    <option value="ALL">顯示全部地區 (${flowAreas.length})</option>
+                                    ${areaOptions}
+                                </select>
+                            </div>
+                            <div class="type-filter-box" style="flex: 1;">
+                                <label for="filter-type-${i}" style="font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 6px; display: block;">🏷️ 種類篩選：</label>
+                                <select id="filter-type-${i}" style="width: 100%; padding: 8px 12px; border: 1px solid var(--paper-line); border-radius: var(--radius); background: var(--paper); color: var(--ink); font-family: inherit; font-size: 13.5px; cursor: pointer;">
+                                    <option value="ALL">顯示全部種類</option>
+                                    ${reservedCount > 0 ? `<option value="RESERVED_ONLY">◆ 僅顯示已訂位 (${reservedCount})</option>` : ''}
+                                    <option value="sight">⛩️ 景點</option>
+                                    <option value="food">🍜 美食</option>
+                                    <option value="cafe">☕ 咖啡甜點</option>
+                                    <option value="shop">🛍️ 購物</option>
+                                    <option value="stay">🏨 住宿</option>
+                                    <option value="move">➡️ 移動</option>
+                                </select>
+                            </div>
                         </div>
                         ${blocks}
                     </div>
                 </div>`;
                 daysEl.appendChild(panel);
 
-                const selectEl = panel.querySelector(`#filter-${i}`);
-                if (selectEl) {
-                    selectEl.addEventListener('change', (e) => filterByArea(i, e.target.value));
+                const areaSelect = panel.querySelector(`#filter-area-${i}`);
+                const typeSelect = panel.querySelector(`#filter-type-${i}`);
+                
+                if (areaSelect) {
+                    areaSelect.addEventListener('change', () => applyFilters(i));
+                }
+                if (typeSelect) {
+                    typeSelect.addEventListener('change', () => applyFilters(i));
                 }
 
                 const resetBtn = panel.querySelector('.reset-btn');
                 if (resetBtn) {
-                    resetBtn.addEventListener('click', () => filterByArea(i, 'ALL'));
+                    resetBtn.addEventListener('click', () => {
+                        if (areaSelect) areaSelect.value = 'ALL';
+                        if (typeSelect) typeSelect.value = 'ALL';
+                        applyFilters(i);
+                    });
                 }
 
                 panel.querySelectorAll('.node-btn').forEach(btn => {
                     btn.addEventListener('click', () => {
                         const areaName = btn.getAttribute('data-area');
-                        filterByArea(i, areaName);
+                        if (areaSelect) areaSelect.value = areaName;
+                        applyFilters(i);
                     });
                 });
             });
@@ -688,7 +712,7 @@
         function renderSpot(it, dayIndex) {
             const link = gmaps(it.name, it.addr);
             return `
-            <div class="spot" id="spot-${dayIndex}-${it._idx}" data-area="${it.area || ''}" data-reserved="${it.reserved ? 'true' : 'false'}">
+            <div class="spot" id="spot-${dayIndex}-${it._idx}" data-area="${it.area || ''}" data-cat="${it.cat}" data-reserved="${it.reserved ? 'true' : 'false'}">
                 <div class="icon-tag icon-${it.cat}">${ICONS[it.cat]}</div>
                 <div class="spot-body">
                     <div class="spot-top">
@@ -750,33 +774,46 @@
             leafletMaps[dayIndex] = map;
         }
 
-        function filterByArea(dayIndex, selectedValue) {
+        function applyFilters(dayIndex) {
             const panel = document.getElementById('panel-' + dayIndex);
             if (!panel) return;
 
-            const selectEl = document.getElementById('filter-' + dayIndex);
-            if (selectEl && selectEl.value !== selectedValue) {
-                selectEl.value = selectedValue;
-            }
+            const areaSelect = document.getElementById('filter-area-' + dayIndex);
+            const typeSelect = document.getElementById('filter-type-' + dayIndex);
+            
+            const selectedArea = areaSelect ? areaSelect.value : 'ALL';
+            const selectedType = typeSelect ? typeSelect.value : 'ALL';
 
+            // 更新區域節點按鈕的 active 狀態
             panel.querySelectorAll('.node-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.getAttribute('data-area') === selectedValue);
+                btn.classList.toggle('active', btn.getAttribute('data-area') === selectedArea);
             });
 
+            // 過濾景點卡片
             const spots = panel.querySelectorAll('.spot');
             spots.forEach(spot => {
                 const spotArea = spot.getAttribute('data-area');
+                const spotCat = spot.getAttribute('data-cat');
                 const isReserved = spot.getAttribute('data-reserved') === 'true';
 
-                if (!selectedValue || selectedValue === 'ALL') {
-                    spot.classList.remove('hidden');
-                } else if (selectedValue === 'RESERVED_ONLY') {
-                    spot.classList.toggle('hidden', !isReserved);
+                // 區域匹配判斷
+                const matchArea = (selectedArea === 'ALL' || spotArea === selectedArea);
+                
+                // 種類匹配判斷
+                let matchType = false;
+                if (selectedType === 'ALL') {
+                    matchType = true;
+                } else if (selectedType === 'RESERVED_ONLY') {
+                    matchType = isReserved;
                 } else {
-                    spot.classList.toggle('hidden', spotArea !== selectedValue);
+                    matchType = (spotCat === selectedType);
                 }
+
+                // 同時符合才顯示
+                spot.classList.toggle('hidden', !(matchArea && matchType));
             });
 
+            // 更新各大類別區塊（Cat Blocks）的計數與顯隱狀態
             panel.querySelectorAll('.cat-block').forEach(block => {
                 const visibleSpots = block.querySelectorAll('.spot:not(.hidden)').length;
                 const countSpan = block.querySelector('.cat-title .count');
