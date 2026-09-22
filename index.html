@@ -527,7 +527,9 @@
                     name: item.name,
                     addr: item.addr,
                     area: item.area || "",
-                    reserved: item.reserved === 'true'
+                    reserved: item.reserved === 'true',
+                    note: item.note || "",
+                    link: item.link || ""
                 });
 
                 if (item.area && item.lat && item.lng) {
@@ -714,7 +716,7 @@
         }
 
         function renderSpot(it, dayIndex) {
-            const link = gmaps(it.name, it.addr);
+            const link = it.link ? it.link : gmaps(it.name, it.addr);
             return `
             <div class="spot" id="spot-${dayIndex}-${it._idx}" data-area="${it.area || ''}" data-cat="${it.cat}" data-reserved="${it.reserved ? 'true' : 'false'}">
                 <div class="icon-tag icon-${it.cat}">${ICONS[it.cat]}</div>
