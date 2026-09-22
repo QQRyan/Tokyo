@@ -175,6 +175,11 @@
         .node-btn.active { background: var(--yamanote-dark); color: #fff; border-color: var(--yamanote-dark); }
         .arrow { color: var(--ink-soft); font-size: 10px; }
 
+        .filters-row { display: flex; gap: 12px; margin-bottom: 20px; }
+        @media (max-width: 480px) {
+            .filters-row { flex-direction: column; gap: 8px; }
+        }
+
         .area-filter-box {
             display: flex; align-items: center; gap: 10px; background: var(--card);
             border: 1px solid var(--paper-line); border-radius: var(--radius); padding: 10px 14px;
@@ -651,17 +656,17 @@
                         ${flowHtml}
                     </div>
                     <div>
-                        <div class="filters-row" style="display: flex; gap: 12px; margin-bottom: 16px;">
-                            <div class="area-filter-box" style="flex: 1;">
-                                <label for="filter-area-${i}" style="font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 6px; display: block;">📍 區域篩選：</label>
-                                <select id="filter-area-${i}" style="width: 100%; padding: 8px 12px; border: 1px solid var(--paper-line); border-radius: var(--radius); background: var(--paper); color: var(--ink); font-family: inherit; font-size: 13.5px; cursor: pointer;">
+                        <div class="filters-row">
+                            <div class="area-filter-box" style="flex: 1; margin-bottom: 0;">
+                                <label for="filter-area-${i}">📍 區域篩選：</label>
+                                <select id="filter-area-${i}">
                                     <option value="ALL">顯示全部地區</option>
                                     ${areaOptions}
                                 </select>
                             </div>
-                            <div class="type-filter-box" style="flex: 1;">
-                                <label for="filter-type-${i}" style="font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 6px; display: block;">🏷️ 種類篩選：</label>
-                                <select id="filter-type-${i}" style="width: 100%; padding: 8px 12px; border: 1px solid var(--paper-line); border-radius: var(--radius); background: var(--paper); color: var(--ink); font-family: inherit; font-size: 13.5px; cursor: pointer;">
+                            <div class="area-filter-box" style="flex: 1; margin-bottom: 0;">
+                                <label for="filter-type-${i}">🏷️ 種類篩選：</label>
+                                <select id="filter-type-${i}">
                                     <option value="ALL">顯示全部種類</option>
                                     ${reservedCount > 0 ? `<option value="RESERVED_ONLY">◆ 僅顯示已訂位 (${reservedCount})</option>` : ''}
                                     <option value="sight">⛩️ 景點</option>
