@@ -334,6 +334,37 @@
             return bestPath;
         }
 
+        // 快速 Nearest Neighbor 求解器（用於大於 8 個區域的極速備用方案，防止 N! 階乘卡死瀏覽器）
+        function findShortestPathNearestNeighbor(startLocation, remainingAreas) {
+            const unvisited = [...remainingAreas];
+            const path = [];
+            let current = startLocation;
+
+            while (unvisited.length > 0) {
+                let nearestIndex = -1;
+                let minDistance = Infinity;
+                const currentCoords = LOCATION_COORDS[current];
+
+                for (let i = 0; i < unvisited.length; i++) {
+                    const coords = LOCATION_COORDS[unvisited[i]];
+                    const dist = getHaversineDistance(currentCoords, coords);
+                    if (dist < minDistance) {
+                        minDistance = dist;
+                        nearestIndex = i;
+                    }
+                }
+
+                if (nearestIndex !== -1) {
+                    current = unvisited.splice(nearestIndex, 1)[0];
+                    path.push(current);
+                } else {
+                    current = unvisited.shift();
+                    path.push(current);
+                }
+            }
+            return path;
+        }
+
         // 優化路線：結合起點飯店、客製化規則與最優 TSP 求解器
         function optimizeRoute(flowAreas, dayNo) {
             if (flowAreas.length === 0) return flowAreas;
@@ -403,8 +434,13 @@
                 }
             }
 
-            // 3. 呼叫 DFS TSP 求解器尋找其餘地區的絕對最短路徑
-            const restOptimal = findShortestPath(current, unvisited);
+            // 3. 呼叫 TSP 求解器尋找其餘地區的最短路徑（若剩餘區域大於 8 個則採用快速 Nearest Neighbor 避免瀏覽器卡死）
+            let restOptimal;
+            if (unvisited.length <= 8) {
+                restOptimal = findShortestPath(current, unvisited);
+            } else {
+                restOptimal = findShortestPathNearestNeighbor(current, unvisited);
+            }
             return optimized.concat(restOptimal);
         }
 
